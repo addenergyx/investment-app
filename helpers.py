@@ -40,15 +40,13 @@ db_URI = os.getenv('AWS_DATABASE_URL')
 
 c = CurrencyRates()
 
-def get_mail()
-    
-    SMTP_SERVER = "imap.gmail.com"
-    
-    mail = imaplib.IMAP4_SSL(SMTP_SERVER)
-    
-    mail.login(email_user, email_pass)
-    
-    return mail
+port = 993
+
+SMTP_SERVER = "imap.gmail.com"
+
+mail = imaplib.IMAP4_SSL(SMTP_SERVER)
+
+mail.login(email_user, email_pass)
 
 engine = create_engine(db_URI)
 
@@ -73,8 +71,6 @@ def get_holdings():
     return holdings
 
 def get_mailbox_list(folder):
-    
-    mail = get_mail()
     
     mail.select(folder)
 
@@ -150,8 +146,6 @@ def get_market(isin, symbol, old_symbol=''):
 def get_portfolio():
     
     print('Updating Orders')
-    
-    mail = get_mail()
     
     mailbox_list = get_mailbox_list('investing')
     
@@ -465,9 +459,6 @@ def time_frame_returns(timeframe='M'):
 
 def get_summary():
 
-    
-    mail = get_mail()
-    
     mailbox_list = get_mailbox_list('dividends')
     
     data = []
@@ -576,8 +567,6 @@ def formatting(num):
 def get_capital():
     
     mailbox_list = get_mailbox_list('deposits')
-    
-    mail = get_mail()
     
     total = 0
     

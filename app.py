@@ -15,7 +15,7 @@ from dash.dependencies import Input, Output, State
 #import plotly.graph_objs as go
 from visuals import *
 #performance_chart, ml_model, period_chart, goal_chart, profit_loss_chart, cumsum_chart, dividend_chart, return_treemap, convert_to_gbp, get_holdings
-#from components import Fab
+from components import Fab
 import os
 from sqlalchemy import create_engine
 from jobs import updates
