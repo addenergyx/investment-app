@@ -62,9 +62,9 @@ equities = pd.read_sql_table("equities", con=engine, index_col='index')
 def stats():
     summary_df = pd.read_sql_table("summary", con=engine, index_col='index')
 
-    # balance = summary_df['Closing balance'].iloc[-2]
-    # balance = "{:.2f}".format(round(balance, 2))
-    balance = "{:.2f}".format(get_capital())
+    balance = summary_df['Closing balance'].iloc[-2]
+    balance = "{:.2f}".format(round(balance, 2))
+    #balance = "{:.2f}".format(get_capital())
     month_profit = round(summary_df['Returns'].iloc[-1], 2)
     total_profit = "{:.2f}".format(round(summary_df['Returns'].cumsum().iloc[-1], 2))
     
