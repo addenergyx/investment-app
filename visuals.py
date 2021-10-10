@@ -318,6 +318,17 @@ def performance_chart(ticker='TSLA'):
         print("Can't find ticker")
         yf_symbol = ticker
     
+    
+    start = datetime(2020, 2, 7)
+    end = datetime.now()    
+    
+    #index = web.DataReader(yf_symbol, start, end)
+    
+    yf.pdr_override()
+    index = web.get_data_yahoo(yf_symbol, start=start, end=end)
+    
+    index = index.reset_index()
+    
     # cache tesla data because function takes too long
     # Heroku has a 30sec timeout
     # if stock has >150 orders cache data
@@ -331,16 +342,6 @@ def performance_chart(ticker='TSLA'):
     else:
     
         buys, sells = get_buy_sell(ticker) 
-        
-        start = datetime(2020, 2, 7)
-        end = datetime.now()    
-        
-        #index = web.DataReader(yf_symbol, start, end)
-        
-        yf.pdr_override()
-        index = web.get_data_yahoo(yf_symbol, start=start, end=end)
-        
-        index = index.reset_index()
         
         index['Midpoint'] = (index['High'] + index['Low']) / 2
         
@@ -375,10 +376,6 @@ def performance_chart(ticker='TSLA'):
         
         buys['Target'] = buy_target
         sells['Target'] = sell_target
-    
-    yf.pdr_override()
-    index = web.get_data_yahoo(yf_symbol, start=start, end=end)
-    index = index.reset_index()
 
     ## Discrete color graph
     
