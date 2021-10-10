@@ -611,9 +611,9 @@ data that was generated when the Dash app was first initialised
 app.layout = Homepage()
 
 if __name__ == '__main__':
-    app.run_server(debug=True, threaded=True, use_reloader=False) 
+    #app.run_server(debug=True, threaded=True, use_reloader=False) 
     #app.run_server(debug=True, use_reloader=False, processes=4) # https://community.plotly.com/t/keep-updating-redrawing-graph-while-function-runs/8744
-    #app.run_server()
+    app.run_server()
 
 
 
