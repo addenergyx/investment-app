@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Apr 18 11:12:58 2021
+Created on Wed Jun 10 07:02:46 2020
 
 @author: david
 """
@@ -10,439 +10,610 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
-import dash_daq as daq
-import plotly.graph_objs as go
+#import dash_daq as daq
+from dash.dependencies import Input, Output, State
+#import plotly.graph_objs as go
+from visuals import *
+#performance_chart, ml_model, period_chart, goal_chart, profit_loss_chart, cumsum_chart, dividend_chart, return_treemap, convert_to_gbp, get_holdings
+from components import Fab
+import os
+from sqlalchemy import create_engine
+from jobs import updates
 import plotly.express as px
-import yfinance as yf
-from dash.dependencies import Input, Output
-import pandas as pd
-from datetime import datetime
-from pandas_datareader import data as web
-from plotly.subplots import make_subplots
-import calendar
-#pd.options.mode.chained_assignment = None  # default='warn'
+#from live_portfolio import get_live_portfolio
+from helpers import get_capital
+from visuals import day_treemap, return_treemap
+from datetime import time
+import time as t
 
-def vis1(filters='Returns'):
-    seasonality = pd.read_csv("https://raw.githubusercontent.com/addenergyx/datasets/main/trading%20data%20export%20with%20results.csv", parse_dates=['Trading day'], dayfirst=True)
+db_URI = os.getenv('AWS_DATABASE_URL')
+engine = create_engine(db_URI)
 
-    seasonality['weekday'] = seasonality['Trading day'].apply(lambda x :calendar.day_name[x.weekday()])
-    
-    seasonality['Trading_time'] = pd.to_timedelta(seasonality['Trading time'])
-    seasonality['Trading_time'] = seasonality['Trading_time'].apply(lambda x : int(x.seconds /3600))
-    
-    s_buys = seasonality[seasonality['Type'] == 'Buy']
-    s_sells = seasonality[seasonality['Type'] == 'Sell']
-    
-    s_buys['Trading_time'] = pd.to_timedelta(s_buys['Trading time'])
-    s_buys['Trading_time'] = s_buys['Trading_time'].apply(lambda x : int(x.seconds /3600))
-    s_buys = s_buys[['weekday','Trading_time']]
-    s_buys = s_buys.groupby(['weekday','Trading_time']).size().reset_index().rename(columns={0:'Buy Count'})
-    
-    s_sells['Trading_time'] = pd.to_timedelta(s_sells['Trading time'])
-    s_sells['Trading_time'] = s_sells['Trading_time'].apply(lambda x : int(x.seconds /3600))
-    s_sells = s_sells[['weekday','Trading_time', 'Result']]
-    s_sells = s_sells.groupby(['weekday','Trading_time']).agg(['sum','count']).reset_index()
-    s_sells.columns = ['weekday', 'Trading_time', 'Returns', 'Sell Count']
-    
-    seasonality_df = seasonality.groupby(['weekday','Trading_time']).size().reset_index().rename(columns={0:'Count'})
-    
-    seasonality_df = seasonality_df.merge(s_buys, on=['weekday','Trading_time'], how='left').merge(s_sells, on=['weekday','Trading_time'], how='left')
-    
-    seasonality_df['pct_buy'] = seasonality_df['Buy Count'] / seasonality_df['Count']
-    
-    seasonality_df['Trading_time'] = [f'0{x}:00' if x < 10 else f'{x}:00' for x in seasonality_df['Trading_time']]
-    
-    seasonality_df['Returns'] = seasonality_df['Returns'].fillna(0)
-    
-    crange = [-100,100] if filters == 'Returns' else [0,1]
-    mpoint = 0 if filters == 'Returns' else 0.5
-    
-    fig = px.scatter(seasonality_df, y="weekday", x="Trading_time",
-	         size="Count", color=filters, color_continuous_scale='RdBu', color_continuous_midpoint=mpoint,
-             size_max=40, range_color=crange
-                 )
+external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes.BOOTSTRAP,
+                       'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css']
 
-    fig.update_yaxes(title='Weekday', categoryorder='array', categoryarray= ['Friday', 'Thursday', 'Wednesday', 'Tuesday', 'Monday'])
-    #fig.update_yaxes(categoryorder='array', categoryarray= ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])
-    fig.update_xaxes(categoryorder='array', categoryarray= [f'0{x}:00' if x < 10 else f'{x}:00' for x in range(7,21)])
-    fig.layout.yaxis.showgrid=False
-    fig.layout.xaxis.showgrid=False
-    
-    return fig
-
-def vis2():
-    seasonality_df = pd.read_csv("https://raw.githubusercontent.com/addenergyx/datasets/main/animated.csv")
-    
-    fig = px.scatter(seasonality_df, x="Trading_time", y="Trading day",
-    	         size="Count", color="pct_buy", color_continuous_scale='RdBu', color_continuous_midpoint=0.5,
-                     hover_name="Count", animation_frame='week',
-                 size_max=50
-                     )
-    fig.update_yaxes(title='Weekday', categoryorder='array', categoryarray= ['Friday', 'Thursday', 'Wednesday', 'Tuesday', 'Monday'])
-    fig.update_xaxes(categoryorder='array', categoryarray= [f'0{x}:00' if x < 10 else f'{x}:00' for x in range(7,21)])
-    #fig.update_layout(transition = {'duration': 50000}, margin=dict(l=0,r=0,b=0,t=0))
-    fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 1000
-    
-    return fig
-    
-def vis3():
-    
-    trades = pd.read_csv("https://raw.githubusercontent.com/addenergyx/datasets/main/trading%20data%20export%20with%20results.csv", parse_dates=['Trading day'], dayfirst=True)
-    days = trades.groupby(['Trading day']).size().reset_index().rename(columns={0:'Count'})
-    
-    buys = trades[trades['Type'] == 'Buy'].groupby(['Trading day']).size().reset_index().rename(columns={0:'Buy Execution'})
-    sells = trades[trades['Type'] == 'Sell'].groupby(['Trading day']).size().reset_index().rename(columns={0:'Sell Execution'})
-    
-    idx = pd.bdate_range(min(days['Trading day']), max(days['Trading day']))
-    days.set_index('Trading day', inplace=True)
-    buys.set_index('Trading day', inplace=True)
-    sells.set_index('Trading day', inplace=True)
-    
-    days = days.reindex(idx, fill_value=0).reset_index().rename(columns={'index':'Trading day', 'Count':'Trading Activity'})
-    buys = buys.reindex(idx, fill_value=0).reset_index().rename(columns={'index':'Trading day'})
-    sells = sells.reindex(idx, fill_value=0).reset_index().rename(columns={'index':'Trading day'})
-    
-    days = days.merge(buys, on=['Trading day'], how='left').merge(sells, on=['Trading day'], how='left')
-    
-    #df = pd.read_csv("https://raw.githubusercontent.com/addenergyx/datasets/main/day_count.csv")
-    fig = px.bar(days, x='Trading day', y='Trading Activity')
-    #plot(fig)
-    
-    fig = go.Figure(data=[
-        go.Bar(name='Buy Executions', x=days['Trading day'], y=days['Buy Execution']),
-        go.Bar(name='Sell Executions', x=days['Trading day'], y=days['Sell Execution'])
-    ])
-    # Change the bar mode
-    fig.update_layout(barmode='stack', bargap=0)
-    
-    return fig
-    
-def vis4(colour='RdBu'):
-    trades = pd.read_csv("https://raw.githubusercontent.com/addenergyx/datasets/main/trading%20data%20export%20with%20results.csv", parse_dates=['Trading day'])
-    
-    trades['Result'] = trades['Result'].fillna(0.0)
-    
-    trades = trades.dropna(thresh=15)
-    
-    trades = trades.dropna(axis=1, thresh=400)
-    
-    a = trades.groupby(['Sector','Industry','Name']).count()
-    b = trades.groupby(['Sector','Industry','Name']).sum()
-    
-    a = a.reset_index()
-    b = b.reset_index()
-    
-    a['count'] = a['Result']
-    
-    a = a[['Sector','Industry', 'Name', 'count']]
-    b = b[['Sector','Industry', 'Name','Result']]
-    
-    c = pd.concat([a, b['Result']], axis=1)
-    
-    #Weights sum to zero, can't be normalized
-    b['Result'] = b['Result'].astype(int)
-    b = b[b['Result']!=0]
-    
-    fig = px.treemap(c, path=['Sector', 'Industry', 'Name'], values='count', color='Result',
-                          color_continuous_scale=colour, color_continuous_midpoint=0, range_color=[-1000,1000], 
-                          #hover_data=['Ticker', 'MARKET VALUE', 'PCT']
-                          )
-            
-    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0),
-                        paper_bgcolor='rgba(0,0,0,0)',
-                        plot_bgcolor='rgba(0,0,0,0)',
-                        transition={
-                            'duration': 500,
-                            'easing': 'cubic-in-out',
-                        }
-                      )
-    #fig.update_layout(coloraxis_showscale=False)
-    fig.data[0].hovertemplate = '%{label}<br><br>%{value} Trades<br>£%{color}'
-    
-    #fig.data[0].textinfo = 'label+text+percent entry+percent parent+value'
-    return fig
-    
-def stock_split_adjustment(r):
-    
-    #portfolio = pd.read_csv("https://raw.githubusercontent.com/addenergyx/datasets/main/trading%20data%20export%20with%20results.csv", parse_dates=['Trading day'], dayfirst=True)
-    portfolio = pd.read_csv("trading data export with results.csv", parse_dates=['Trading day'], dayfirst=True)
-
-    ticker = portfolio[portfolio['Ticker'] == r.Ticker]['YF_TICKER'].values[0]    
-
-    aapl = yf.Ticker(ticker)
-    split_df = aapl.splits.reset_index()
-    split = split_df[split_df['Date'] > r['Trading day']]['Stock Splits'].sum()
-    
-    if split > 0:
-        r.Execution_Price = r.Execution_Price/split
-    
-    return r
-
-def get_buy_sell(ticker):
-    
-    #portfolio = pd.read_csv("https://raw.githubusercontent.com/addenergyx/datasets/main/trading%20data%20export%20with%20results.csv", parse_dates=['Trading day'], dayfirst=True)
-    portfolio = pd.read_csv("trading data export with results.csv", parse_dates=['Trading day'], dayfirst=True)
-
-    df = portfolio[portfolio['Ticker'] == ticker]
-
-    #df['Execution_Price'] = df['Price / share'] # Convert price to original currency
-    # df['Execution_Price'] = df['Price'] / df['Exchange rate'] # for emails instead of csv
-    
-    df['Trading day'] = pd.to_datetime(df['Trading day']) # Match index date format
-    
-    buys = df[df['Type']=='Buy']
-    sells = df[df['Type']=='Sell']
-    
-    buys = buys.apply(stock_split_adjustment, axis=1)
-    sells = sells.apply(stock_split_adjustment, axis=1)
-    
-    return buys, sells
-
-def performance_chart(ticker='TSLA'):
-
-    #ticker = 'NG'
-    portfolio = pd.read_csv("trading data export with results.csv", parse_dates=['Trading day'], dayfirst=True)
-    #portfolio = pd.read_csv("https://raw.githubusercontent.com/addenergyx/datasets/main/trading%20data%20export%20with%20results.csv", parse_dates=['Trading day'], dayfirst=True)
-
-    
-    if ticker=='TSLA':
-        buys = pd.read_csv("buys.csv")
-        sells = pd.read_csv("sells.csv")
-        index = pd.read_csv("tesla.csv")  
-           
-    else:
-        buys, sells = get_buy_sell(ticker) #Need to make this quicker
-    
-        start = datetime(2020, 2, 7)
-        end = datetime.now()    
-    
-        yf_symbol = portfolio[portfolio['Ticker'] == ticker]['YF_TICKER'].values[0]    
-    
-        index = web.DataReader(yf_symbol, 'yahoo', start, end)
-        index = index.reset_index()
-    
-        index['Midpoint'] = (index['High'] + index['Low']) / 2
-    
-    buy_target = []
-    sell_target = []
-
-    for i, row in buys.iterrows():
-        mid = index[index['Date'] == row['Trading day']]['Midpoint'].values[0]
-
-        if row['Execution_Price'] < mid:
-            buy_target.append(1)
-        else:
-            buy_target.append(0)
-
-    for i, row in sells.iterrows():
-        mid = index[index['Date'] == row['Trading day']]['Midpoint'].values[0]
-
-        if row['Execution_Price'] > mid:
-            sell_target.append(1)
-        else:
-            sell_target.append(0)
-
-    buys['Target'] = buy_target
-    sells['Target'] = sell_target
-
-    ## Discrete color graph
-
-    main_fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-    fig = go.Figure(data=[go.Candlestick(x=index['Date'],
-                    open=index['Open'],
-                    high=index['High'],
-                    low=index['Low'],
-                    close=index['Adj Close'],
-                    name='Stock',
-                    #increasing_line_color= 'blue', decreasing_line_color= 'red'
-                    )])
-
-    # fig = go.Candlestick(x=index['Date'],
-    #             open=index['Open'],
-    #             high=index['High'],
-    #             low=index['Low'],
-    #             close=index['Adj Close'],
-    #             name='Stock')
-
-    # Must be a string for plotly to interpret numeric values as a discrete value
-    # https://plotly.com/python/discrete-color/
-    sells['Target'] = sells['Target'].astype(str)
-    buys['Target'] = buys['Target'].astype(str)
-
-    if len(sells) > 0:
-
-        fig1 = px.scatter(sells, x='Trading day', y='Execution_Price', color='Target')
-
-        for x in fig1.data:
-            if x['legendgroup'] == '1':
-                x['marker'] =  {'color':'#E24C4F', 'line': {'color': 'yellow', 'width': 2}, 'size': 7, 'symbol': 'circle'}
-                x['name'] = 'Successful Sell Point'
-                fig.add_trace(x)
-            elif x['legendgroup'] == '0':
-                x['marker'] =  {'color':'#E24C4F', 'line': {'color': 'black', 'width': 2}, 'size': 7, 'symbol': 'circle'}
-                x['name'] = 'Unsuccessful Sell Point'
-                fig.add_trace(x)
-
-    if len(buys) > 0:
-
-        fig2 = px.scatter(buys, x='Trading day', y='Execution_Price', color='Target')
-        #fig2.update_traces(marker=dict(color='blue'))
-        #fig2.update_traces(marker=dict(color='#30C296', size=7, line=dict(width=2, color='DarkSlateGrey')))
-
-        for x in fig2.data:
-            if x['legendgroup'] == '1':
-                x['marker'] =  {'color':'#3D9970', 'line': {'color': 'yellow', 'width': 2}, 'size': 7, 'symbol': 'circle'}
-                x['name'] = 'Successful Buy Point'
-                fig.add_trace(x)
-            elif x['legendgroup'] == '0':
-                x['marker'] =  {'color':'#3D9970','line': {'color': 'black', 'width': 2}, 'size': 7, 'symbol': 'circle'}
-                x['name'] = 'Unsuccessful Buy Point'
-                fig.add_trace(x)
-
-    for x in range(len(fig.data)):
-        main_fig.add_trace(fig.data[x], secondary_y=True)
-
-    # include a go.Bar trace for volumes
-    volume_fig = go.Figure(go.Bar(x=index['Date'], y=index['Volume'], name='Volume'))
-    volume_fig.update_traces(marker_color='rgb(158,202,225)', opacity=0.6)
-
-    main_fig.add_trace(volume_fig.data[0], secondary_y=False)
-
-    main_fig.update_layout(hovermode="x unified", title=f'{ticker} Stock Graph', 
-                    #   legend=dict(
-                    #         yanchor="top",
-                    #         y=0.99,
-                    #         xanchor="left",
-                    #         x=0.01
-                    # )
-                    # showlegend=False
-                    )
-
-    main_fig.layout.yaxis1.showgrid=False
-
-    #main_fig.show()
-    
-    return main_fig #, percentage
-
-portfolio = pd.read_csv("https://raw.githubusercontent.com/addenergyx/datasets/main/trading%20data%20export%20with%20results.csv", parse_dates=['Trading day'], dayfirst=True)
-portfolio['count'] = portfolio.groupby('Name')['Name'].transform('count')
-portfolio.sort_values(by='count', ascending=False, inplace=True)
-
-#portfolio.sort_values(by='Trading day', ascending=False, inplace=True)
-
-def company(x):
-#     try:
-    company = portfolio[portfolio['Ticker'] == x]['Name'].values[0]
-    dic = {'label': f'{company} ({x})', 'value': x}
-#     except:
-#         dic = {'label': str(x), 'value': x}
-    return dic
-
-tickers = [company(x) for x in portfolio['Ticker'].drop_duplicates()]
-
-# Build App
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, url_base_pathname='/investments/', external_stylesheets=external_stylesheets, assets_folder='./assets/investment_assets',
+            )
 
 server = app.server
 
-app.layout = html.Div([
-    
-    html.H1("Visualisation 1 (V1)"),
-    html.H3("Trade volumes by day and hour of week"),
-    dcc.RadioItems(
-    options=[
-        {'label': 'Profit/Loss', 'value': 'Returns'},
-        {'label': 'Buy/Sell', 'value': 'pct_buy'},
-    ],
-    value='Returns',
-    labelStyle={'display': 'inline-block'},
-    id='filters'
-    ),
-    dcc.Graph(id='vis1', figure=vis1()),
-    
-    html.H1("Visualisation 2 (V2)"),
-    html.H3('Trade volumes by day and hour of week aggregated by week (interactive)'),
-    dcc.Loading(
-        dcc.Graph(id='vis2', figure=vis2()),
-    ),
-    
-    html.H1("Visualisation 3 (V3)"),
-    html.H3('Trade volumes over the year'),
-    dcc.Graph(id='vis3', figure=vis3()),
-    
-    html.H1("Visualisation 4 (V4)"),
-    html.H3('Treemap of trades aggregated by Sector and Industry'),
-    dcc.RadioItems(
-    options=[
-        {'label': 'Red-Blue (Colourblind safe)', 'value': 'RdBu'},
-        {'label': 'Red-Green', 'value': 'RdYlGn'},
-    ],
-    value='RdBu',
-    labelStyle={'display': 'inline-block'},
-    id='colours'
-    ),
-    html.Div(style={'margin':'20px'}),
-    dcc.Graph(id='vis4', figure=vis4()),
-    
-    html.H1("Visualisation 5 (V5)"),
-    html.H3('OHLC + Volume and successful/unsuccessful trades (interactive).'),
-    html.H6('Please note can take a while to load'),
-    dcc.Loading(
-        dcc.Graph(id='graphy'),
-    ),
-        
-    html.Div(
-            [
-          dcc.Dropdown(
-            id='ticker-dropdown',
-            options=tickers,
-            value=tickers[0]['value'],
-            searchable=True,
-            style={'margin-bottom':'50px'}
-          ),
-      ]),
-    html.Div(style={'margin':'20px'}),
-    
-    ])
-# Define callback to update graph
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        {%css%}
+        {%favicon%}
+    </head>
+    <body>
+        <div></div>
+        {%app_entry%}
+        <footer> 
+          {%config%} 
+          {%scripts%} 
+          {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
 
+portfolio = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day']).sort_values(['Trading day','Trading time'], ascending=False)
+equities = pd.read_sql_table("equities", con=engine, index_col='index')
+
+def stats():
+    summary_df = pd.read_sql_table("summary", con=engine, index_col='index')
+
+    # balance = summary_df['Closing balance'].iloc[-2]
+    # balance = "{:.2f}".format(round(balance, 2))
+    balance = "{:.2f}".format(get_capital())
+    month_profit = round(summary_df['Returns'].iloc[-1], 2)
+    total_profit = "{:.2f}".format(round(summary_df['Returns'].cumsum().iloc[-1], 2))
+    
+    if month_profit > 0:
+        style = {'color': 'green'}
+        month = f'£{"{:.2f}".format(month_profit)}'
+    elif month_profit < 0:
+        style = {'color': 'red'}
+        month = f'-£{"{:.2f}".format(abs(month_profit))}'
+    else:
+        style = {'color': 'white'}
+        month = f'£{"{:.2f}".format(month_profit)}'
+    
+    return f'£{balance}', f'£{total_profit}', f'{month}', style
+
+summary = stats()
+
+# if time(hour=9, minute=0) < datetime.now().time() < time(hour=14, minute=30) or time(hour=21) < datetime.now().time() < time(hour=22):
+#     interval = 240000
+# else:
+#     interval = 120000
+
+# def update_news(ticker):
+#     # Init
+#     newsapi = NewsApiClient(api_key=os.getenv('NEWS_API_KEY'))
+    
+#     # /v2/top-headlines
+#     top_headlines = newsapi.get_top_headlines(q=ticker,
+#                                               #sources='google-news',
+#                                               language='en',
+#                                               #country='gb'
+#                                               )
+    
+#     articles = top_headlines['articles']
+    
+#     titles = []
+#     urls = []
+#     for a in articles:
+#         titles.append(a['title'])
+#         urls.append(a['url'])
+    
+#     d = {'Title':titles,'Url':urls}
+    
+#     news_df = pd.DataFrame(d)
+
+#     return news_df
+
+# df = update_news('BFT')
+
+app.title = 'Investments'
+
+colours = {
+            'remaining':'#1FDBB5',
+            'principal':'#F54784',
+            'interest':'#FFAC51'
+          }
+
+graph_card = [
+                html.Div([            
+                    dcc.Loading(
+                        dcc.Graph(id='graphy'#, figure=performance_chart('TSLA')
+                                  )
+                    )
+                ], id='graph-block', hidden=False)
+             ]
+
+profit_card = [
+                html.Div([            
+                    dcc.Loading(
+                        dcc.Graph(id='profit-graph')
+                    )
+                ], id='profit-block', hidden=False)
+             ]
+
+map_card = [
+                html.Div([            
+                   #dcc.Loading(
+                        dcc.Graph(figure=day_treemap(), id='treemap-graph'#, figure=day_treemap()
+                                  )
+                    #)
+                ], id='treemap-block', hidden=False)
+             ]
+
+map_cardb = [
+                html.Div([            
+                   #dcc.Loading(
+                        dcc.Graph(figure=return_treemap(), id='returnmap-graph'#, figure=day_treemap()
+                                  )
+                    #)
+                ], id='returnmap-block', hidden=False)
+             ]
+
+stats_card = [
+                dbc.CardBody(
+                    [
+                        html.H2('Results'),
+                        html.P("Capital"),
+                        html.Strong(html.P(summary[0], id='Capital', className='result')),
+                        html.P('Total Realised P/L'),
+                        html.Strong(html.P(summary[1], id='total-profit', className='result')),
+                        html.P("This Month's Realised P/L"),
+                        html.Strong(html.P(summary[2], id='monthly-profit', className='result', style=summary[3])),
+                        # html.P('Floating P/L'),
+                        # html.Strong(html.P(id='floats', className='result'))
+                    ], className='stats'
+                )
+             ]
+
+trades_card = [
+                html.Div([            
+                    dcc.Loading(
+                        dcc.Graph(figure=trades_chart(), id='trades-graph')
+                    )
+                ], id='trades-block', hidden=False)
+             ]
+
+performance_main = [
+                  dbc.Row(
+                      [
+                          dbc.Col(html.Div(profit_card), width=12),
+                      ], className = 'data-row'
+                  ),
+                      
+                  dbc.Row(
+                      [
+                          dcc.RadioItems(
+                           options=[
+                               {'label': 'Red-Blue (Colourblind safe)', 'value': 'RdBu'},
+                               {'label': 'Red-Green', 'value': 'RdYlGn'},
+                           ],
+                           value='RdBu',
+                           labelStyle={'display': 'inline-block'},
+                           style={'color':'white'},
+                           id='colours'
+                           ),
+                          dbc.Col(html.Div(map_card), width=12),
+                      ], className = 'data-row'
+                  ),
+                  
+                   dbc.Row(
+                       [
+                           dbc.Col(html.Div(map_cardb), width=12),
+                       ], className = 'data-row'
+                   ),
+                                                 
+                  dbc.Row(
+                      [
+                          html.H6('Please note can take a while to load'),
+                          dbc.Col(html.Div(graph_card), width=12),
+                      ], className = 'data-row'
+                  ),
+                  
+                  dbc.Row(
+                      [
+                          dbc.Col(dbc.Card(id='full-data-card', className='summary-card'), width=12, lg=8),
+                          dbc.Col(dbc.Card( 
+                              # children=[                 
+                              #     dcc.Loading(
+                              #         dcc.Graph(id='ml-graph'#, figure=ml_model()
+                              #                   )
+                              #     )
+                              # ],
+                              #html.P(id='advice'), 
+                              #id='side-data-card', 
+                              className='summary-card justify-content-center align-self-center'), width=12, lg=4),
+                          # dbc.Col(dbc.Card(stats_card, id='side-data-card', className='summary-card'), width=12, lg=4),
+                          # #dbc.Col(dbc.Card(aaa, id='test', className='summary-card'), width=12, lg=4),
+                      ], className = 'data-row'
+                  ),
+                                       
+                  dbc.Row(
+                      [
+                          dbc.Col(width=12),
+                      ], className = 'data-row'
+                  ),
+                                       
+                  dcc.Interval(id="stats-interval", n_intervals=0, interval=600000),
+                  dcc.Interval(id="map-interval", n_intervals=0, interval=60000), # TODO: change interval based on time of day, 240s in pre market, 120 in market hours 
+                  dcc.Interval(id="map-intervalb", n_intervals=0, interval=60000),
+                  dcc.Interval(id="dropdown-interval", n_intervals=0, interval=720000),
+                  html.Div(id='container-button-basic', hidden=True)
+                 
+              ]
+
+insight_main = [
+                  dbc.Row(
+                      [
+                          dbc.Col(html.Div(trades_card), width=12),
+                      ], className = 'data-row'
+                  ),
+                  
+                  dbc.Row(
+                      [
+                            html.H4('Treemap of trades/returns aggregated by Sector and Industry', style={'color':'white'},),
+                            html.Br(),
+                            dcc.RadioItems(
+                            options=[
+                                {'label': 'Red-Blue (Colourblind safe)', 'value': 'RdBu'},
+                                {'label': 'Red-Green', 'value': 'RdYlGn'},
+                            ],
+                            value='RdBu',
+                            labelStyle={'display': 'inline-block'},
+                            style={'color':'white'},
+                            id='colours'
+                            ),
+                            html.Div(style={'margin':'20px'}),
+                            dbc.Col(dcc.Graph(id='vis4', figure=vis4()), width=12),
+                      ], className = 'data-row'
+                  ),
+                  
+            ]
+
+ml_main = []
+
+# Returns Top cell bar for header area
+# def get_top_bar_cell(cellTitle, cellValue):
+#     return html.Div(
+#         #className="two-col",
+#         children=[
+#             html.P(className="p-top-bar", children=cellTitle),
+#             html.P(id=cellTitle, className="display-none", children=cellValue),
+#             html.P(children=human_format(cellValue)),
+#         ],
+#     )
+
+
+# def rows(row, df):
+#     pp = []
+#     for x in range(0, len(df.columns)):
+#         pp.append(html.Td(
+#             html.P(row.values[x], className='balances'), **{'data-label': 'Month'}
+#         ))
+#     return pp
+        
+# def build_table(df):
+#     return html.Div(
+#     [
+#         #Header
+#         html.Table([html.Tr([html.Th(col) for col in df.columns])]
+#         +
+#         #body
+#         [
+#             html.Tr(
+#                 [
+#                     rows(row, df)
+  
+#                 ]) for i, row in df.iterrows()], className="hover-table amortization-table"
+#         ), 
+#     ], className='table-block', #style={"height": "100%", "overflowY": "scroll", "overflowX": "hidden"}, #className='large-2'
+#     )
+
+def build_table(df):
+    return html.Div(
+    [
+        #Header
+        html.Table([html.Tr([html.Th(col) for col in df.columns[:7]])]
+        +
+        #body
+        [
+            html.Tr(
+                [
+                    html.Td(
+                        html.P(row.values[0], className='balances'), **{'data-label': 'Month'}
+                    ),
+                    html.Td(
+                        html.P(row.values[1], className='balances'), **{'data-label': 'Payment'} 
+                    ),
+                    html.Td(
+                        html.P(row.values[2], className='balances'), className='amount', **{'data-label': 'Principal'}
+                    ),
+                    html.Td(
+                        html.P((row.values[3]), className='balances'), className='amount', **{'data-label': 'Interest'}
+                    ),
+                    html.Td(
+                        html.P((row.values[4]), className='balances'), className='amount', **{'data-label': 'Total Interest'} 
+                    ),
+                    html.Td(
+                        html.P((row.values[5].strftime("%d/%m/%Y")), className='balances'), className='amount', **{'data-label': 'Balance'} 
+                    ),
+                ]) for i, row in df.iterrows()], className="hover-table amortization-table"
+        ), 
+    ], className='table-block', #style={"height": "100%", "overflowY": "scroll", "overflowX": "hidden"}, #className='large-2'
+    )
+
+def build_card(title, colour):
+    return html.Div(
+        [
+            dbc.Row(
+                [
+                    #dbc.Col(html.Span(className='fas fa-money-bill-wave icon', style={'color':colour}), className='d-flex justify-content-center icon-container', width=3), 
+                    dbc.Col(
+                        [
+                            html.P(title.capitalize(), className='money')
+                        ], className='d-flex justify-content-center text-center')
+                ]
+            ),
+            dbc.Row(
+                [
+                    #dbc.Col(width=3),
+                    dbc.Col(html.P(id=f'{title}-value'), className='d-flex justify-content-center text-center')
+                ]
+            ),
+        ]
+    )
+
+app.config.suppress_callback_exceptions = True
+
+def company(x):
+    try:
+        company = equities[equities['INSTRUMENT'] == x]['COMPANY'].values[0]
+        dic = {'label': f'{company} ({x})', 'value': x}
+    except:
+        dic = {'label': str(x), 'value': x}
+    return dic
+
+tickers = [company(x) for x in portfolio['Ticker Symbol'].drop_duplicates()]
+
+# tickers = []
+# for x in portfolio['Ticker Symbol'].drop_duplicates():
+#     try:
+#         company = equities[equities['INSTRUMENT'] == x]['COMPANY'].values[0]
+#         tickers.append({'label': f'{company} ({x})', 'value': x})
+#     except:
+#         tickers.append({'label': str(x), 'value': x})
+
+#tickers = [{'label':str(x), 'value': x} for x in portfolio['Ticker Symbol'].drop_duplicates()]
+
+charts = [{'label':str(x), 'value': x} for x in ['Goals', 'Monthly', 'Dividends', 'Cumulative', 'Profit/Loss', 'Daily', 'Weekly', 'Yearly', 'Quarterly', 'Fiscal Year']]
+maps = [{'label':str(x), 'value': x} for x in ['Day', 'Portfolio']]
+
+body = html.Div(
+            [
+              dbc.Row(
+                    [
+                        ## Side Panel
+                        dbc.Col(
+                           [
+                               html.H1('Investments', style={'text-align':'center'}),
+                              
+                               html.Div(
+                                   [
+                                        html.Div(dbc.Row([ dbc.Col(dbc.Card(stats_card, className='summary-card stats-card',  ))]), hidden=False, id='statss' )
+                                        
+                                   ], id='user-inputs'
+                               ),
+                              
+                              #html.Div(style={'margin':'200px'}),
+                              
+                             html.Div(
+                                   [
+                                  dcc.Dropdown(
+                                    id='chart-dropdown',
+                                    options=charts,
+                                    value='Goals',
+                                    clearable=False,
+                                    style={'margin-top':'100px'}
+                                  ),
+                              ]),
+                            
+                              html.Div(
+                                    [
+                                   dcc.Dropdown(
+                                     id='map-dropdown',
+                                     options=maps,
+                                     value='Day',
+                                     clearable=False,
+                                     style={'margin-top':'50px'}
+                                   ),
+                               ]), 
+                            
+                              html.Div(
+                                   [
+                                  dcc.Dropdown(
+                                    id='ticker-dropdown',
+                                    options=tickers,
+                                    value=tickers[0]['value'],
+                                    searchable=True,
+                                    style={'margin-top':'50px'}
+                                  ),
+                              ]),
+                              
+                              # html.Div(
+                              #      [
+                              #     html.Button(
+                              #       'Update All',
+                              #       id='update-all-btn',
+                              #       style={'margin-top':'50px'}
+                              #     ),
+                              #     html.Button(
+                              #       'Update Portfolio',
+                              #       id='update-portfolio-btn',
+                              #       style={'margin-top':'50px'}
+                              #     ),
+                              # ]),
+                              
+                           ], id='side-panel', width=12, lg=2
+                        ),
+                      
+                     ## Main panel
+                     dbc.Col(
+                         [
+                             dbc.Row(
+                                  [
+                                      dbc.Col(html.Button('Performance', id='Performance-btn', className = 'button button1'), className = 'center-stuff', width=4),
+                                      dbc.Col(html.Button('Insight', id='Insight-btn', className = 'button button2'), className = 'center-stuff', width=4),
+                                      dbc.Col(html.Button('Machine Learning', id='Machine-Learning-btn', className = 'button button3'), className = 'center-stuff', width=4),
+                                  ], className = 'data-row'
+                             ),
+                          
+                            html.Div(performance_main, id='main-panel-content')
+                            
+                         ], width=12, lg=9, id='main-panel'),
+                    
+         
+                ], no_gutters=True),
+             ])
+
+@app.callback([Output("Capital", "children"), Output("total-profit", "children"), 
+                #Output("total-interest", "children"),  
+                Output("monthly-profit", "children"), Output("monthly-profit", "style")], 
+              [Input("stats-interval", "n_intervals")])
+def event_cb(data):
+    return stats()
+
+# @app.callback(
+#     Output('container-button-basic', 'children'),
+#     [Input('update-portfolio-btn', 'n_clicks'), Input('update-all-btn', 'n_clicks')])
+# def update_output(btn1, btn2):
+    
+#     changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+#     print([p['prop_id'] for p in dash.callback_context.triggered])
+    
+#     if 'update-portfolio-btn' in changed_id:
+#         return get_live_portfolio()
+#     elif 'update-all-btn' in changed_id:
+#         return updates()
+#     return ''
+
+@app.callback(
+    Output('main-panel-content', 'children'),
+    [Input('Performance-btn', 'n_clicks'), Input('Insight-btn', 'n_clicks'), Input('Machine-Learning-btn', 'n_clicks')])
+def update_output(btn1, btn2, btn3):
+    
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    print([p['prop_id'] for p in dash.callback_context.triggered])
+    
+    if 'Performance-btn' in changed_id:
+        return performance_main
+    elif 'Insight-btn' in changed_id:
+        return insight_main
+    elif 'Machine-Learning-btn' in changed_id:
+        return ml_main
+    return performance_main
+
+@app.callback(
+    [Output('ticker-dropdown', 'options'), Output('full-data-card','children')],
+    [Input('dropdown-interval', 'n_intervals')])
+def update_tickers(n_clicks):
+    
+    portfolio = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day']).sort_values(['Trading day','Trading time'], ascending=False)
+    tickers = [company(x) for x in portfolio['Ticker Symbol'].drop_duplicates()]
+    
+    # portfolio = portfolio[['Ticker Symbol', 'Type', 'Shares', 'Price', 'Total amount', 'Trading day']]
+    portfolio = portfolio[['Ticker Symbol', 'Type', 'Shares', 'Price', 'Total cost', 'Trading day']]
+
+    return tickers, build_table(portfolio)
+    
 @app.callback(Output('graphy','figure'), 
               [Input("ticker-dropdown", "value")])
 def event_a(ticker):
     return performance_chart(ticker)
 
+# @app.callback(Output('treemap-graph','figure'), 
+#               [Input("colours", "value")])
+# def event_colour(colour):
+#     return day_treemap(colour), return_treemap(colour)
+
+@app.callback(
+    [Output('treemap-graph','figure'), Output('returnmap-graph','figure')],
+    [Input("map-interval", "n_intervals"), Input("colours", "value")])
+def event_o(ticks, colour):
+    return day_treemap(colour), return_treemap(colour)
+
+@app.callback(Output('profit-graph','figure'), 
+              [Input("chart-dropdown", "value")])
+def event_b(chart):
+        
+    options = {'Goals' : goal_chart,
+           'Monthly' : period_chart,
+           'Dividends' : dividend_chart,
+           'Cumulative' : cumsum_chart,
+           'Profit/Loss' : profit_loss_chart,
+           'Daily' : period_chart,
+           'Weekly' : period_chart,
+           'Yearly': period_chart,
+           'Quarterly' : period_chart,
+           'Fiscal Year': period_chart,
+    }
+    
+    # Seperated from options dict because running all functions takes time
+    if chart == 'Monthly':
+        param = 'M'
+        return options[chart](param)
+    elif chart == 'Daily':
+        param = 'D'
+        return options[chart](param)
+    elif chart == 'Weekly':
+        param = 'W'
+        return options[chart](param)
+    elif chart == 'Yearly':
+        param = 'Y'
+        return options[chart](param)
+    elif chart == 'Quarterly':
+        param = 'Q'
+        return options[chart](param)
+    elif chart == 'Fiscal Year':
+        param = 'A-APR'
+        return options[chart](param)
+        
+    fig = options[chart]()
+    
+    return fig
+
 @app.callback(Output('vis4','figure'), 
               [Input("colours", "value")])
-def event_b(colour):
+def event_g(colour):
     return vis4(colour)
 
-@app.callback(Output('vis1','figure'), 
-              [Input("filters", "value")])
-def event_c(choice):
-    return vis1(choice)
+def Homepage():
+    return html.Div([
+            body,
+            #button()
+            #html.Div(Fab()),
+        ], id='background')
 
-# Run app and display result inline in the notebook
+"""
+Set layout to be a function so that for each new page load                                                                                                       
+the layout is re-created with the current data, otherwise they will see                                                                                                     
+data that was generated when the Dash app was first initialised
+"""     
+
+#app.scripts.config.serve_locally=True
+app.layout = Homepage()
+
 if __name__ == '__main__':
-    app.run_server() 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    #app.run_server(debug=True, threaded=True, use_reloader=False) 
+    #app.run_server(debug=True, use_reloader=False, processes=4) # https://community.plotly.com/t/keep-updating-redrawing-graph-while-function-runs/8744
+    app.run_server()
 
 
 
