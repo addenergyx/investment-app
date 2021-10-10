@@ -171,9 +171,6 @@ mccabe==0.6.1
 measurement==3.2.0
 mgwr==2.1.2
 mistune==0.8.4
-mkl-fft==1.2.0
-mkl-random==1.1.1
-mkl-service==2.3.0
 modin==0.9.1
 more-itertools==8.3.0
 mortgage==1.0.5
