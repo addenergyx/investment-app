@@ -48,7 +48,7 @@ c = CurrencyRates()
 
 # mail.login(email_user, email_pass)
 
-# engine = create_engine(db_URI)
+engine = create_engine(db_URI)
 
 # date = '28/01/2021 14:42'
 # date_time_obj = datetime.strptime(date, '%d/%m/%Y %H:%M')
