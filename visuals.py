@@ -318,7 +318,6 @@ def performance_chart(ticker='TSLA'):
         print("Can't find ticker")
         yf_symbol = ticker
     
-    
     start = datetime(2020, 2, 7)
     end = datetime.now()    
     
@@ -333,11 +332,16 @@ def performance_chart(ticker='TSLA'):
     # Heroku has a 30sec timeout
     # if stock has >150 orders cache data
     if ticker == 'TSLA': 
-        data = pd.read_csv(f'cached_data/{ticker}.csv')
+        
+        # data = pd.read_csv(f'cached_data/{ticker}.csv')
+        data = pd.read_sql_table(f'{ticker}', con=engine, index_col='index')
+        
         buys = data[data['Type']=='Buy']
         sells = data[data['Type']=='Sell']
+        
         # a = buys.append(sells)
         # a.to_csv(f'cached_data/{ticker}.csv')
+        # a.to_sql(f'{ticker}', engine, if_exists='replace')
         
     else:
     
