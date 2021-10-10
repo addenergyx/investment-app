@@ -1,4 +1,3 @@
-*.txt
 *.pyc
 *.csv
 *.json
@@ -11,3 +10,4 @@ chromedriver.exe
 *.gshortcut
 hotlist backups/desktop.ini
 *.log
+mycreds.txt
