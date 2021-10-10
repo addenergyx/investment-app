@@ -16,20 +16,20 @@ from plotly.offline import plot
 import plotly.graph_objects as go
 from pytrends.request import TrendReq
 from sqlalchemy import create_engine
-from pytrends import dailydata
+#from pytrends import dailydata
 from helpers import get_buy_sell, get_yf_symbol, time_frame_returns
-from forex_python.converter import CurrencyRates
+#from forex_python.converter import CurrencyRates
 from plotly.subplots import make_subplots
 from iexfinance.stocks import Stock
-from scraper import getPremarketChange, get_driver
-from fake_useragent import UserAgent
+#from scraper import getPremarketChange, get_driver
+#from fake_useragent import UserAgent
 #import time as t
 
 load_dotenv(verbose=True, override=True)
 
 db_URI = os.getenv('AWS_DATABASE_URL')
 engine = create_engine(db_URI)
-c = CurrencyRates()
+#c = CurrencyRates()
 
 # driver = get_driver(#headless=True
 #                     )
@@ -576,143 +576,143 @@ def avg_stock_split_adjustment(r):
     return r
 
 
-def ml_model():
-    pytrend = TrendReq()
+# def ml_model():
+#     pytrend = TrendReq()
 
-    keyword = 'tesla Stock'
+#     keyword = 'tesla Stock'
     
-    end = datetime.now()
-    start = datetime(end.year - 5, end.month, end.day)
+#     end = datetime.now()
+#     start = datetime(end.year - 5, end.month, end.day)
     
-    ss = start.strftime('%Y-%m-%d')
-    ee = end.strftime('%Y-%m-%d')
+#     ss = start.strftime('%Y-%m-%d')
+#     ee = end.strftime('%Y-%m-%d')
     
-    # 1 year follows price trend better than 5 year 
-    # This  may be because the values are calculated on a scale from 0 to 100, 
-    # where 100 is the timeframe with the most popularity as a fraction of total searches in the given period of time, 
-    # a value of 50 indicates a time which is half as popular. 
-    # A value of 0 indicates a location where there was not enough data for this term. 
-    # Source →Google Trends.
+#     # 1 year follows price trend better than 5 year 
+#     # This  may be because the values are calculated on a scale from 0 to 100, 
+#     # where 100 is the timeframe with the most popularity as a fraction of total searches in the given period of time, 
+#     # a value of 50 indicates a time which is half as popular. 
+#     # A value of 0 indicates a location where there was not enough data for this term. 
+#     # Source →Google Trends.
     
-    # For my hypothesis I feel 1 year is more accurate due to influx of new traders due to corona
-    # Old school traders rely on fundementals/technicals whereas newer trader trade on sentiment and momentum
+#     # For my hypothesis I feel 1 year is more accurate due to influx of new traders due to corona
+#     # Old school traders rely on fundementals/technicals whereas newer trader trade on sentiment and momentum
     
-    pytrend.build_payload(kw_list=[keyword], timeframe=f'{ss} {ee}')
-    df = pytrend.interest_over_time() # Weekly data
-    df.reset_index(level=0, inplace=True)
+#     pytrend.build_payload(kw_list=[keyword], timeframe=f'{ss} {ee}')
+#     df = pytrend.interest_over_time() # Weekly data
+#     df.reset_index(level=0, inplace=True)
     
-    df2 = dailydata.get_daily_data(keyword, start.year, start.month, end.year, end.month)
-    df2.reset_index(level=0, inplace=True)
-    df2 = df2.rename(columns={'date':'Date'})
+#     df2 = dailydata.get_daily_data(keyword, start.year, start.month, end.year, end.month)
+#     df2.reset_index(level=0, inplace=True)
+#     df2 = df2.rename(columns={'date':'Date'})
     
-    index = web.DataReader('tsla', 'yahoo', start, end)
-    index = index.reset_index()
+#     index = web.DataReader('tsla', 'yahoo', start, end)
+#     index = index.reset_index()
 
-    merged_df = pd.merge(index, df2, on="Date")
+#     merged_df = pd.merge(index, df2, on="Date")
 
-    model_df = merged_df[['Date', 'Open', 'Adj Close', 'Volume', merged_df.filter(regex='_unscaled$').columns[0]]]
+#     model_df = merged_df[['Date', 'Open', 'Adj Close', 'Volume', merged_df.filter(regex='_unscaled$').columns[0]]]
 
-    training_dataset = model_df[model_df['Date'] < datetime(2020, 11, 1)]
-    test_data = model_df[model_df['Date'] >= datetime(2020, 11, 1)]
+#     training_dataset = model_df[model_df['Date'] < datetime(2020, 11, 1)]
+#     test_data = model_df[model_df['Date'] >= datetime(2020, 11, 1)]
     
-    from sklearn.preprocessing import MinMaxScaler
-    import numpy as np
+#     from sklearn.preprocessing import MinMaxScaler
+#     import numpy as np
     
-    ## Using normalisation as will be using sigmoid function as activation functionn of output layer
-    sc = MinMaxScaler()
-    training_data = sc.fit_transform(training_dataset.drop(['Date'], axis=1))
-    training_data.shape[0]
+#     ## Using normalisation as will be using sigmoid function as activation functionn of output layer
+#     sc = MinMaxScaler()
+#     training_data = sc.fit_transform(training_dataset.drop(['Date'], axis=1))
+#     training_data.shape[0]
     
-    window = 30
+#     window = 30
     
-    x_train = [training_data[i-window:i] for i in range(60, training_data.shape[0])]
+#     x_train = [training_data[i-window:i] for i in range(60, training_data.shape[0])]
     
-    # Open stock price
-    y_train = [training_data[i, 0] for i in range(60, training_data.shape[0])]
+#     # Open stock price
+#     y_train = [training_data[i, 0] for i in range(60, training_data.shape[0])]
     
-    x_train, y_train = np.array(x_train ),  np.array(y_train)
+#     x_train, y_train = np.array(x_train ),  np.array(y_train)
     
-    x_train.shape, y_train.shape
+#     x_train.shape, y_train.shape
     
-    from keras.models import Sequential
-    from keras.layers import LSTM, Dense, Dropout
+#     from keras.models import Sequential
+#     from keras.layers import LSTM, Dense, Dropout
     
-    ## Model architecture
-    model = Sequential()
+#     ## Model architecture
+#     model = Sequential()
     
-    ## Chose 50 nodes for high dimensionality
-    model.add(LSTM(50, return_sequences=True, input_shape=(x_train.shape[1], x_train.shape[2])))
+#     ## Chose 50 nodes for high dimensionality
+#     model.add(LSTM(50, return_sequences=True, input_shape=(x_train.shape[1], x_train.shape[2])))
     
-    # Dropout Regularisation to pervent overfitting. 20% is a common choice
-    model.add(Dropout(0.2))
+#     # Dropout Regularisation to pervent overfitting. 20% is a common choice
+#     model.add(Dropout(0.2))
     
-    # Layers 2 - 3
-    for x in range(2,4):
-        print(f'Initalise layer {x}')
-        model.add(LSTM(50, return_sequences=True))
-        model.add(Dropout(0.2))
+#     # Layers 2 - 3
+#     for x in range(2,4):
+#         print(f'Initalise layer {x}')
+#         model.add(LSTM(50, return_sequences=True))
+#         model.add(Dropout(0.2))
     
-    # Final layer
-    model.add(LSTM(50))
-    model.add(Dropout(0.2))
+#     # Final layer
+#     model.add(LSTM(50))
+#     model.add(Dropout(0.2))
     
-    # Output layer
-    model.add(Dense(1))
+#     # Output layer
+#     model.add(Dense(1))
     
-    model.compile(loss="mean_squared_error", optimizer="adam") # Try RMWprop optimizer after
+#     model.compile(loss="mean_squared_error", optimizer="adam") # Try RMWprop optimizer after
     
-    model.summary()
+#     model.summary()
     
-    ## 32 recommended batch size
-    model.fit(
-        x_train, y_train, epochs=100, batch_size=32, verbose=1, validation_split=0.2 #, validation_data=(Xtest, ytest)
-    ) # Loss progressively got better (lower)
+#     ## 32 recommended batch size
+#     model.fit(
+#         x_train, y_train, epochs=100, batch_size=32, verbose=1, validation_split=0.2 #, validation_data=(Xtest, ytest)
+#     ) # Loss progressively got better (lower)
     
-    ## https://machinelearningmastery.com/how-to-use-the-timeseriesgenerator-for-time-series-forecasting-in-keras/
+#     ## https://machinelearningmastery.com/how-to-use-the-timeseriesgenerator-for-time-series-forecasting-in-keras/
     
-    ## Predictions ##
+#     ## Predictions ##
     
-    #stock_test_data = model_df[model_df.index >= len(training_data)]
-    #dataset = model_df.drop(['Date'], axis=1)
+#     #stock_test_data = model_df[model_df.index >= len(training_data)]
+#     #dataset = model_df.drop(['Date'], axis=1)
     
-    # Adding last window days of training set to test set for LSTM
-    total_test_data = pd.concat((training_dataset.tail(window), test_data), ignore_index = True).drop(['Date'], axis=1)
+#     # Adding last window days of training set to test set for LSTM
+#     total_test_data = pd.concat((training_dataset.tail(window), test_data), ignore_index = True).drop(['Date'], axis=1)
     
-    scaled_test_data = sc.transform(total_test_data)
+#     scaled_test_data = sc.transform(total_test_data)
     
-    #stock_test_data = test_data.drop(['Date'], axis=1)
+#     #stock_test_data = test_data.drop(['Date'], axis=1)
     
-    x_test = [scaled_test_data[i-window:i] for i in range(window, scaled_test_data.shape[0])]
-    y_test = [scaled_test_data[i, 0] for i in range(window, scaled_test_data.shape[0])]
+#     x_test = [scaled_test_data[i-window:i] for i in range(window, scaled_test_data.shape[0])]
+#     y_test = [scaled_test_data[i, 0] for i in range(window, scaled_test_data.shape[0])]
     
-    x_test, y_test = np.array(x_test),  np.array(y_test)
+#     x_test, y_test = np.array(x_test),  np.array(y_test)
     
-    x_test.shape, y_test.shape
+#     x_test.shape, y_test.shape
     
-    y_pred = model.predict(x_test)
+#     y_pred = model.predict(x_test)
     
-    ## How to use inverse_transform in MinMaxScaler for a column in a matrix
-    ## https://stackoverflow.com/questions/49330195/how-to-use-inverse-transform-in-minmaxscaler-for-a-column-in-a-matrix
-    # invert predictions
-    # Original scaler variable (sc) won't work as it expects a 2D array instead of the 1D y_pred array we are trying to parse.
-    scale = MinMaxScaler()
-    scale.min_, scale.scale_ = sc.min_[0], sc.scale_[0]
-    y_pred = scale.inverse_transform(y_pred)
-    y_test = test_data['Open']
+#     ## How to use inverse_transform in MinMaxScaler for a column in a matrix
+#     ## https://stackoverflow.com/questions/49330195/how-to-use-inverse-transform-in-minmaxscaler-for-a-column-in-a-matrix
+#     # invert predictions
+#     # Original scaler variable (sc) won't work as it expects a 2D array instead of the 1D y_pred array we are trying to parse.
+#     scale = MinMaxScaler()
+#     scale.min_, scale.scale_ = sc.min_[0], sc.scale_[0]
+#     y_pred = scale.inverse_transform(y_pred)
+#     y_test = test_data['Open']
     
-    y_pred  = [x[0] for x in y_pred.tolist()]
+#     y_pred  = [x[0] for x in y_pred.tolist()]
     
-    test_dates = pd.Series([training_dataset['Date'].iloc[-1]]).append(test_data['Date'], ignore_index=True)
-    y_pred_graph =  [training_dataset['Open'].iloc[-1]] + y_pred
-    y_test_graph = pd.Series([training_dataset['Open'].iloc[-1]]).append(y_test, ignore_index=True).tolist()
+#     test_dates = pd.Series([training_dataset['Date'].iloc[-1]]).append(test_data['Date'], ignore_index=True)
+#     y_pred_graph =  [training_dataset['Open'].iloc[-1]] + y_pred
+#     y_test_graph = pd.Series([training_dataset['Open'].iloc[-1]]).append(y_test, ignore_index=True).tolist()
     
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=training_dataset['Date'], y=training_dataset['Open'], name='Past Stock Price'))
-    fig.add_trace(go.Scatter(x=test_dates, y=y_pred_graph, name='Predicted Stock Price'))
-    fig.add_trace(go.Scatter(x=test_dates, y=y_test_graph, name='Actual Stock Price'))
-    fig.update_layout(title="Predicted vs Actual Stock Price", xaxis_title="Date", yaxis_title="Opening Price")
+#     fig = go.Figure()
+#     fig.add_trace(go.Scatter(x=training_dataset['Date'], y=training_dataset['Open'], name='Past Stock Price'))
+#     fig.add_trace(go.Scatter(x=test_dates, y=y_pred_graph, name='Predicted Stock Price'))
+#     fig.add_trace(go.Scatter(x=test_dates, y=y_test_graph, name='Actual Stock Price'))
+#     fig.update_layout(title="Predicted vs Actual Stock Price", xaxis_title="Date", yaxis_title="Opening Price")
     
-    return fig
+#     return fig
 
 
 def trades_chart():

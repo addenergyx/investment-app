@@ -20,7 +20,7 @@ import os
 from sqlalchemy import create_engine
 from jobs import updates
 import plotly.express as px
-from live_portfolio import get_live_portfolio
+#from live_portfolio import get_live_portfolio
 from helpers import get_capital
 from visuals import day_treemap, return_treemap
 from datetime import time
