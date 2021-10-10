@@ -309,6 +309,15 @@ def performance_chart(ticker='TSLA'):
 
     #ticker = 'XOS'
     
+    all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
+    
+    try:
+        market = all_212_equities[all_212_equities['INSTRUMENT'] == ticker]['MARKET NAME'].values[0] 
+        yf_symbol = get_yf_symbol(market, ticker)   
+    except:
+        print("Can't find ticker")
+        yf_symbol = ticker
+    
     # cache tesla data because function takes too long
     # Heroku has a 30sec timeout
     # if stock has >150 orders cache data
@@ -320,15 +329,6 @@ def performance_chart(ticker='TSLA'):
         # a.to_csv(f'cached_data/{ticker}.csv')
         
     else:
-        
-        all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
-    
-        try:
-            market = all_212_equities[all_212_equities['INSTRUMENT'] == ticker]['MARKET NAME'].values[0] 
-            yf_symbol = get_yf_symbol(market, ticker)   
-        except:
-            print("Can't find ticker")
-            yf_symbol = ticker
     
         buys, sells = get_buy_sell(ticker) 
         
@@ -374,7 +374,7 @@ def performance_chart(ticker='TSLA'):
     
         
         buys['Target'] = buy_target
-        sells['Target'] = sell_targe
+        sells['Target'] = sell_target
     
     yf.pdr_override()
     index = web.get_data_yahoo(yf_symbol, start=start, end=end)
