@@ -21,8 +21,7 @@ from sqlalchemy import create_engine
 from jobs import updates
 import plotly.express as px
 #from live_portfolio import get_live_portfolio
-from helpers import get_capital
-from visuals import day_treemap, return_treemap
+#from helpers import get_capital # Fix later, can't access gmail in heroku
 from datetime import time
 import time as t
 

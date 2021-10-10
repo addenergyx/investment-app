@@ -660,7 +660,7 @@ def get_capital():
     withdraws = total + 85.2
     
     capital = round(deposits - withdraws, 2)
-
+    
     return capital
 
 
