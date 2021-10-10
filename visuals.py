@@ -309,62 +309,77 @@ def performance_chart(ticker='TSLA'):
 
     #ticker = 'XOS'
     
-    all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
-
-    try:
-        market = all_212_equities[all_212_equities['INSTRUMENT'] == ticker]['MARKET NAME'].values[0] 
-        yf_symbol = get_yf_symbol(market, ticker)   
-    except:
-        print("Can't find ticker")
-        yf_symbol = ticker
-
-    buys, sells = get_buy_sell(ticker) 
+    # cache tesla data because function takes too long
+    # Heroku has a 30sec timeout
+    # if stock has >150 orders cache data
+    if ticker == 'TSLA': 
+        data = pd.read_csv(f'cached_data/{ticker}.csv')
+        buys = data[data['Type']=='Buy']
+        sells = data[data['Type']=='Sell']
+        # a = buys.append(sells)
+        # a.to_csv(f'cached_data/{ticker}.csv')
+        
+    else:
+        
+        all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
     
-    start = datetime(2020, 2, 7)
-    end = datetime.now()    
+        try:
+            market = all_212_equities[all_212_equities['INSTRUMENT'] == ticker]['MARKET NAME'].values[0] 
+            yf_symbol = get_yf_symbol(market, ticker)   
+        except:
+            print("Can't find ticker")
+            yf_symbol = ticker
     
+        buys, sells = get_buy_sell(ticker) 
+        
+        start = datetime(2020, 2, 7)
+        end = datetime.now()    
+        
+        #index = web.DataReader(yf_symbol, start, end)
+        
+        yf.pdr_override()
+        index = web.get_data_yahoo(yf_symbol, start=start, end=end)
+        
+        index = index.reset_index()
+        
+        index['Midpoint'] = (index['High'] + index['Low']) / 2
+        
+        buy_target = []
+        sell_target = []
+        
+        for i, row in buys.iterrows():
+            
+            try:
+                mid = index[index['Date'] == row['Trading day']]['Midpoint'].values[0]
+                
+                if row['Execution_Price'] < mid:
+                    buy_target.append(1)
+                else:
+                    buy_target.append(0)
+            except:   
+                # Missing data from yahoo finance
+                print(f'Missing data {row}')
+        
+        for i, row in sells.iterrows():
+            
+            try:
+                mid = index[index['Date'] == row['Trading day']]['Midpoint'].values[0]
+                
+                if row['Execution_Price'] > mid:
+                    sell_target.append(1)
+                else:
+                    sell_target.append(0)
+            except:
+                print(f'Missing data {row}')
     
-    #index = web.DataReader(yf_symbol, start, end)
+        
+        buys['Target'] = buy_target
+        sells['Target'] = sell_targe
     
     yf.pdr_override()
     index = web.get_data_yahoo(yf_symbol, start=start, end=end)
-    
     index = index.reset_index()
-    
-    index['Midpoint'] = (index['High'] + index['Low']) / 2
-    
-    buy_target = []
-    sell_target = []
-    
-    for i, row in buys.iterrows():
-        
-        try:
-            mid = index[index['Date'] == row['Trading day']]['Midpoint'].values[0]
-            
-            if row['Execution_Price'] < mid:
-                buy_target.append(1)
-            else:
-                buy_target.append(0)
-        except:   
-            # Missing data from yahoo finance
-            print(f'Missing data {row}')
-    
-    for i, row in sells.iterrows():
-        
-        try:
-            mid = index[index['Date'] == row['Trading day']]['Midpoint'].values[0]
-            
-            if row['Execution_Price'] > mid:
-                sell_target.append(1)
-            else:
-                sell_target.append(0)
-        except:
-            print(f'Missing data {row}')
 
-    
-    buys['Target'] = buy_target
-    sells['Target'] = sell_target
-        
     ## Discrete color graph
     
     main_fig = make_subplots(specs=[[{"secondary_y": True}]])
