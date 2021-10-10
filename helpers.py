@@ -411,7 +411,7 @@ def get_portfolio():
     
     return trades
 
-t = get_portfolio()
+#t = get_portfolio()
 
 def stock_split_adjustment(r):
         

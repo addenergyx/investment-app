@@ -16,7 +16,6 @@ from dash.dependencies import Input, Output, State
 from visuals import *
 #performance_chart, ml_model, period_chart, goal_chart, profit_loss_chart, cumsum_chart, dividend_chart, return_treemap, convert_to_gbp, get_holdings
 from components import Fab
-from server import server
 import os
 from sqlalchemy import create_engine
 from jobs import updates
@@ -34,26 +33,6 @@ external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes
                        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css']
 
 app = dash.Dash(__name__, url_base_pathname='/investments/', external_stylesheets=external_stylesheets, assets_folder='./assets/investment_assets',
-                meta_tags=[
-                    { 'name':'viewport','content':'width=device-width, initial-scale=1, shrink-to-fit=no' }, ## Fixes media query not showing
-                    {
-                        'name':'description',
-                        'content':'Investments',
-                    },
-                    {
-                        'name':'keywords',
-                        'content':'Investments',
-                    },                        
-
-                    {
-                        'property':'og:image',
-                        'content':'',
-                    },
-                    {
-                        'name':'title',
-                        'content':'Investments',                    
-                    }
-                ]
             )
 
 server = app.server
