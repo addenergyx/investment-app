@@ -1,0 +1,553 @@
+html,body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+    overflow-x: hidden;
+}
+
+.grad .progress {
+    background: #C60F90;
+    box-shadow: inset -3px 3px 6px #a80d7a, 
+                inset 3px -3px 6px #e411a6;
+    
+    /* Needed to keep marker in bar */
+    position: relative; /* remove this and title works */
+    overflow: visible;
+}
+
+.progress-bar, .progress {
+    border-radius: 50px;
+}
+
+.card-body .progress {
+    background: #0F1626;
+    box-shadow: inset -3px 3px 5px #0a0f19, 
+                inset 3px -3px 5px #141d33;
+}
+
+.util-progress {
+    height: 5px;
+}
+
+.baby-step-spacing:nth-child(n+5) .progress {
+    background: #A70F8A;
+    box-shadow: inset -3px 3px 6px #8e0d75, 
+                inset 3px -3px 6px #c0119f;
+}
+
+.marker {
+    width: 2px; 
+    height: 200%; 
+    position: absolute;
+}
+
+.red-marker {
+    background: red; 
+    left: 75%;
+}
+
+.amber-marker { 
+    background: #f0ad4e; 
+    left: 25%;
+}
+
+table {
+  border-collapse: collapse;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+table caption {
+  font-size: 1.5em;
+  margin: .5em 0 .75em;
+}
+
+table tr {
+/*  background-color: #172136;*/
+  border-bottom: 1px solid #152035;
+  padding: .35em;
+}
+
+.hover-table tr:hover {
+    background-color: blueviolet;
+    border-left: 3px solid white;
+}
+
+/*
+table th,
+table td {
+  padding: .625em;
+}
+*/
+
+table th {
+  font-size: .85em;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+p.balances {
+    color: #FFFFFF;
+    margin: auto;
+}
+
+td.amount {
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: right;
+}
+
+td.transaction-table.amount {
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: center;
+}
+
+@media screen and (max-width: 600px) {
+  table.transaction-table {
+    border: 0;
+  }
+
+  p.balances {
+    color: #FFFFFF;
+    margin: auto;
+  }
+    
+  table.transaction-table caption {
+    font-size: 1.3em;
+    color: white;
+  }
+    
+/*
+  table.transaction-table thead {
+    border: none;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+  }
+*/
+  
+  table.transaction-table tr {
+    border-bottom: 3px solid #ddd;
+    display: block;
+    margin-bottom: .625em;
+    color: white;
+  }
+  
+  table.transaction-table td {
+    border-bottom: 1px solid #ddd;
+    display: block;
+    font-size: .8em;
+    text-align: right;
+  }
+  
+  table.transaction-table td::before {
+    /*
+    * aria-label has no advantage, it won't be read inside a table
+    content: attr(aria-label);
+    */
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  table.transaction-table td:last-child {
+    border-bottom: 0;
+  }
+}
+
+@media screen and (max-width: 990px) {
+    .baby-step-spacing:nth-child(n+4) .progress {
+        background: #911186;
+        box-shadow: inset -3px 3px 6px #7b0e72, 
+                    inset 3px -3px 6px #a7149a;
+    }
+}
+.grad {
+    background-image: linear-gradient(to top right, #1E1572, #D30E92);
+    border-style: none;
+    
+}
+
+.grad p {
+    color: white;
+}
+
+.util-block {
+    padding: 5px;
+    margin-left: 20px;
+}
+
+.util-block p {
+    font-size: 10px;
+    margin: auto;
+}
+
+.util-progress {
+    margin: 5px 0px;
+}
+
+#monthly-fig .main-svg {
+    border-radius: 30px;
+    margin-top: 13px;
+}
+
+.card-style {
+    min-height: 85%;
+    margin: 30px 0px;
+    border-radius: 30px;
+    background: #101727;
+    box-shadow:  10px 10px 20px #060910, 
+                 -10px -10px 20px #1a253e;
+}
+
+.card-title {
+    color: #FFFFFF;
+}
+
+.card-style:hover {
+    border-color: aqua;
+}
+
+.card-style {
+    text-align: center;
+}
+
+td.amount {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+
+/*
+table, th, td {
+    color: white;
+    vertical-align: middle;
+}
+
+td.amount {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.hover-table tr {
+    border-bottom: 1px solid #152035;
+    height: 50px;
+    min-height: auto;
+}
+
+.hover-table tr:hover {
+    background-color: blueviolet;
+    border-left: 5px solid white;
+}
+
+p.balances {
+    color: #FFFFFF;
+    margin: auto;
+}
+*/
+
+
+.baby-step-row {
+    height: 50px;
+}
+
+.center {
+    margin: auto;
+    align-items: center
+}
+
+.large-2::-webkit-scrollbar-track {
+  border: 1px solid #000;
+  padding: 2px 0;
+  background-color: #404040;
+}
+
+.large-2::-webkit-scrollbar {
+  width: 10px;
+}
+
+.large-2::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+  background-color: #737272;
+  border: 1px solid #000;
+}
+
+.layzout {
+    padding: 40px;
+    height: 100%; /*maybe 100vh instead*/
+}
+
+@media only screen and (max-width: 600px) {
+  .layzout {
+        background-color: lightblue;
+        padding: 20px;
+        height: 100%;
+  }
+    
+  #facts-card {
+    height: 300px;
+  }  
+}
+
+div>p {
+    -webkit-transition: all .5s ease-in-out;
+    -moz-transition: all .5s ease-in-out;
+    -o-transition: all .5s ease-in-out;
+    transition: all .5s ease-in-out;
+}
+
+.baby-step-spacing {
+  margin: 10px 0px;
+}
+
+div:hover .mainSpan {
+    opacity: .3;
+}
+
+.hoverSpan {
+    opacity:0;
+    font-weight:bold;
+    text-align: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top:30%;
+    bottom:0;
+}
+
+div.hoverSpan:hover  {
+    opacity: 1;
+    -webkit-transition: opacity .5s ease-in-out;
+    transition: opacity .5s ease-in-out;
+}
+
+.ext-box {
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+ }
+
+.int-box { display: table-cell; vertical-align: middle; }
+
+
+.container {
+  align-items: center;
+  background: #eeedef;
+  display: flex;
+  height: 160px;
+  justify-content: center;
+  position: relative;
+  width: 360px;
+}
+.bar {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  height: 32px;
+  left: 0;
+  padding: 0 21px;
+  position: absolute;
+  width: 100%;
+}
+.bar-purple {
+  background: #6000ea;
+  color: white;
+  clip-path: polygon(
+    360px 0,
+    360px 32px,
+    43px 32px,
+    39.775442px 31.67494px,
+    36.772078px 30.74264px,
+    34.054248px 29.26745px,
+    31.686292px 27.31371px,
+    29.732549px 24.94575px,
+    28.257359px 22.22792px,
+    27.325063px 19.22456px,
+    27px 16px,
+    27.325063px 12.77544px,
+    28.257359px 9.77208px,
+    29.732549px 7.05425px,
+    31.686292px 4.68629px,
+    34.054248px 2.73255px,
+    36.772078px 1.25736px,
+    39.775442px 0.32506px,
+    43px 0
+  );
+  transition: clip-path 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.option {
+  cursor: pointer;
+  line-height: 142px;
+  text-align: center;
+  width: 33.33%;
+}
+.bar-outer {
+  clip-path: polygon(0 0, 120px 0, 120px 32px, 0 32px);
+  clip-path: polygon(
+    0 0,
+    0 32px,
+    104px 32px,
+    107.22456px 31.67494px,
+    110.22792px 30.74264px,
+    112.94575px 29.26745px,
+    115.31371px 27.31371px,
+    117.26745px 24.94575px,
+    118.74264px 22.22792px,
+    119.67494px 19.22456px,
+    120px 16px,
+    119.67494px 12.77544px,
+    118.74264px 9.77208px,
+    117.26745px 7.05425px,
+    115.31371px 4.68629px,
+    112.94575px 2.73255px,
+    110.22792px 1.25736px,
+    107.22456px 0.32506px,
+    104px 0
+  );
+  height: 32px;
+  pointer-events: none;
+  transition: clip-path 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+}
+.bar-outer.pos2 .bar-purple {
+  clip-path: polygon(
+    360px 0,
+    360px 32px,
+    149px 32px,
+    145.775442px 31.67494px,
+    142.772078px 30.74264px,
+    140.054248px 29.26745px,
+    137.686292px 27.31371px,
+    135.732549px 24.94575px,
+    134.257359px 22.22792px,
+    133.325063px 19.22456px,
+    133px 16px,
+    133.325063px 12.77544px,
+    134.257359px 9.77208px,
+    135.732549px 7.05425px,
+    137.686292px 4.68629px,
+    140.054248px 2.73255px,
+    142.772078px 1.25736px,
+    145.775442px 0.32506px,
+    149px 0
+  );
+}
+.bar-outer.pos2 {
+  clip-path: polygon(
+    0 0,
+    0 32px,
+    210px 32px,
+    213.22456px 31.67494px,
+    216.22792px 30.74264px,
+    218.94575px 29.26745px,
+    221.31371px 27.31371px,
+    223.26745px 24.94575px,
+    224.74264px 22.22792px,
+    225.67494px 19.22456px,
+    226px 16px,
+    225.67494px 12.77544px,
+    224.74264px 9.77208px,
+    223.26745px 7.05425px,
+    221.31371px 4.68629px,
+    218.94575px 2.73255px,
+    216.22792px 1.25736px,
+    213.22456px 0.32506px,
+    210px 0
+  );
+}
+.bar-outer.pos3 .bar-purple {
+  clip-path: polygon(
+    360px 0,
+    360px 32px,
+    256px 32px,
+    252.775442px 31.67494px,
+    249.772078px 30.74264px,
+    247.054248px 29.26745px,
+    244.686292px 27.31371px,
+    242.732549px 24.94575px,
+    241.257359px 22.22792px,
+    240.325063px 19.22456px,
+    240px 16px,
+    240.325063px 12.77544px,
+    241.257359px 9.77208px,
+    242.732549px 7.05425px,
+    244.686292px 4.68629px,
+    247.054248px 2.73255px,
+    249.772078px 1.25736px,
+    252.775442px 0.32506px,
+    256px 0
+  );
+}
+.bar-outer.pos3 {
+  clip-path: polygon(0 0, 333px 0, 333px 32px, 0 32px);
+  clip-path: polygon(
+    0 0,
+    0 32px,
+    317px 32px,
+    320.22456px 31.67494px,
+    323.22792px 30.74264px,
+    325.94575px 29.26745px,
+    328.31371px 27.31371px,
+    330.26745px 24.94575px,
+    331.74264px 22.22792px,
+    332.67494px 19.22456px,
+    333px 16px,
+    332.67494px 12.77544px,
+    331.74264px 9.77208px,
+    330.26745px 7.05425px,
+    328.31371px 4.68629px,
+    325.94575px 2.73255px,
+    323.22792px 1.25736px,
+    320.22456px 0.32506px,
+    317px 0
+  );
+}
+.bar-outer.left .bar-purple {
+  transition-delay: 0;
+}
+.bar-outer.left {
+  transition-delay: 80ms;
+}
+.bar-outer.right .bar-purple {
+  transition-delay: 80ms;
+}
+.bar-outer.right {
+  transition-delay: 0;
+}
+
+.quote-box {
+    font-family: Brush Script;
+    text-align: center;
+    color: white;
+    margin: 2rem 0;
+}
+
+.quote-header {
+    padding-bottom: 1rem;
+    border-bottom: 2px solid;
+}
+
+#quote {
+    font-size: 1.5rem;
+}
+
+#cite {
+    font-size: .75rem;
+    text-align: right;
+}
+
+#baby-step-1, #baby-step-2, #baby-step-4, #see-more {
+    cursor:pointer;
+}
+
+
