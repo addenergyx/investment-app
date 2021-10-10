@@ -32,7 +32,7 @@ engine = create_engine(db_URI)
 external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes.BOOTSTRAP,
                        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css']
 
-app = dash.Dash(__name__, url_base_pathname='/investments/', external_stylesheets=external_stylesheets, assets_folder='./assets/investment_assets',
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, assets_folder='./assets/investment_assets',
             )
 
 server = app.server

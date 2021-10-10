@@ -40,7 +40,6 @@ db_URI = os.getenv('AWS_DATABASE_URL')
 
 c = CurrencyRates()
 
-port = 993
 
 SMTP_SERVER = "imap.gmail.com"
 
