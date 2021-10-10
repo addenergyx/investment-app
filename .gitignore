@@ -1,0 +1,13 @@
+*.txt
+*.pyc
+*.csv
+*.json
+*.swp
+untitled*.py
+*.env
+*.pickle
+*.html
+chromedriver.exe
+*.gshortcut
+hotlist backups/desktop.ini
+*.log
