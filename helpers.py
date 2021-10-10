@@ -40,15 +40,15 @@ db_URI = os.getenv('AWS_DATABASE_URL')
 
 c = CurrencyRates()
 
-port = 993
+# port = 993
 
-SMTP_SERVER = "imap.gmail.com"
+# SMTP_SERVER = "imap.gmail.com"
 
-mail = imaplib.IMAP4_SSL(SMTP_SERVER)
+# mail = imaplib.IMAP4_SSL(SMTP_SERVER)
 
-mail.login(email_user, email_pass)
+# mail.login(email_user, email_pass)
 
-engine = create_engine(db_URI)
+# engine = create_engine(db_URI)
 
 # date = '28/01/2021 14:42'
 # date_time_obj = datetime.strptime(date, '%d/%m/%Y %H:%M')
