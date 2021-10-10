@@ -1,1 +1,1 @@
-web: gunicorn investments:server
+web: gunicorn investments:server --workers 4
