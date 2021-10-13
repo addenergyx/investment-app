@@ -1035,7 +1035,7 @@ def chart(ticker):
     
     plot(fig)
     
-chart('AMC')
+#chart('AMC')
 
 def line_chart(ticker):
 

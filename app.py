@@ -190,6 +190,7 @@ performance_main = [
                       
                   dbc.Row(
                       [
+                          html.H6('Current holdings day Result(%)', style={'color':'white'}),
                           dcc.RadioItems(
                            options=[
                                {'label': 'Red-Blue (Colourblind safe)', 'value': 'RdBu'},
@@ -206,13 +207,13 @@ performance_main = [
                   
                    dbc.Row(
                        [
+                           html.H6('Current holdings lifetime Result(%)', style={'color':'white'}),
                            dbc.Col(html.Div(map_cardb), width=12),
                        ], className = 'data-row'
                    ),
                                                  
                   dbc.Row(
                       [
-                          html.H6('Please note can take a while to load'),
                           dbc.Col(html.Div(graph_card), width=12),
                       ], className = 'data-row'
                   ),
