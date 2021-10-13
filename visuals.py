@@ -24,6 +24,8 @@ from iexfinance.stocks import Stock
 #from scraper import getPremarketChange, get_driver
 #from fake_useragent import UserAgent
 #import time as t
+import calendar
+import numpy as np
 
 load_dotenv(verbose=True, override=True)
 
@@ -156,10 +158,11 @@ def convert_to_gbp(r):
 # floating_loss = sum(holdings['diff'][holdings['diff'] < 0])
 
 def fig_layout(fig):
-    # fig.update_layout(margin=dict(l=0, r=0, t=0, b=0),
-    #                    paper_bgcolor='rgba(0,0,0,0)',
-    #                    plot_bgcolor='rgba(0,0,0,0)'
-    #                   )
+    fig.update_layout(#margin=dict(l=0, r=0, t=0, b=0),
+                        #paper_bgcolor='rgba(0,0,0,0)',
+                        #plot_bgcolor='rgba(0,0,0,0)',
+                        hovermode="x unified",
+                      )
     return fig
 
 
@@ -169,7 +172,7 @@ def day_treemap(colour='RdBu'):
     holdings = pd.read_sql_table("charts", con=engine, index_col='index')
     
     fig = px.treemap(holdings, path=['Sector', 'Industry', 'Ticker'], values='CAPITAL', color='PCT',
-                      color_continuous_scale=colour, color_continuous_midpoint=0, range_color=[-20,20], 
+                      color_continuous_scale=colour, color_continuous_midpoint=0, range_color=[-15,15], 
                       #hover_data=['Ticker', 'MARKET VALUE', 'PCT']
                       )
         
@@ -200,7 +203,7 @@ def return_treemap(colour='RdBu'):
     holdings = pd.read_sql_table("charts", con=engine, index_col='index')
     
     fig = px.treemap(holdings, path=['Sector', 'Industry', 'Ticker'], values='CAPITAL', color='Ri',
-                     color_continuous_scale=colour, color_continuous_midpoint=0, range_color=[-40,40])
+                     color_continuous_scale=colour, color_continuous_midpoint=0, range_color=[-50,50])
     
     fig.update_layout(    
         margin=dict(l=0, r=0, t=0, b=0),
@@ -330,8 +333,10 @@ def performance_chart(ticker='TSLA'):
     
     # cache tesla data because function takes too long
     # Heroku has a 30sec timeout
-    # if stock has >150 orders cache data
-    if ticker == 'TSLA': 
+    
+    portfolio = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
+                
+    if len(portfolio[portfolio['Ticker Symbol'] == ticker]) > 150: 
         
         # data = pd.read_csv(f'cached_data/{ticker}.csv')
         data = pd.read_sql_table(f'{ticker}', con=engine, index_col='index')
@@ -817,11 +822,427 @@ def vis4(colour='RdBu'):
 
 # plot(vis4(colour='RdBu'))
 
+# holdings = pd.read_sql_table("charts", con=engine, index_col='index')
+
+# trades = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
+
+# DF = pd.DataFrame(columns=['ROE(%)','Beta'])
+# DFc = pd.DataFrame(columns=['ROE(%)','Beta'])
+# bad_tickers = []
 
 
+# for i in holdings['YF_TICKER']:
+    
+#     stock = yf.Ticker(i)
+#     try:
+#         ROE = stock.financials.loc['Net Income']/stock.balance_sheet.loc['Total Stockholder Equity']*100
+#         Mean_ROE = pd.Series(ROE.mean())
+#         Beta = pd.Series(stock.get_info()['beta'])
+
+#         values_to_add = {'ROE(%)': Mean_ROE.values[0].round(2), 'Beta': Beta.values[0].round(2)}
+#         row_to_add = pd.Series(values_to_add, name=i)
+#         DF = DF.append(row_to_add)
+#         print('Downloaded:',i)
+#     except:
+#         bad_tickers.append(i)
 
 
+# # making a copy to work with
+# df = DF.copy()
 
+# # scaling the data
+# from sklearn.preprocessing import StandardScaler
+
+# scaler = StandardScaler()
+# df_values = scaler.fit_transform(df.values)
+
+# # printing pre-processed data
+# print(df_values)
+
+
+# from sklearn.cluster import KMeans
+# km_model = KMeans(n_clusters=3).fit(df_values)
+
+# clusters = km_model.labels_
+
+# df['cluster'] = clusters
+# df['cluster'] = df['cluster'].astype(str)
+# df = df.reset_index().rename(columns={'index':'Ticker'})
+# df
+
+# fig = px.scatter(df, y="ROE(%)", x="Beta", color="cluster", hover_data=['Ticker'])
+# plot(fig)
+
+
+# # calculating inertia (Sum squared error) for k-means models with different values of 'k'
+# inertia = []
+# k_range = range(1,10)
+# for k in k_range:
+#     model = KMeans(n_clusters=k)
+#     model.fit(df[["ROE(%)", "Beta"]])
+#     inertia.append(model.inertia_)
+#     print(inertia)
+    
+# # plotting the 'elbow curve'
+# # plt.figure(figsize=(15,5))
+# # plt.xlabel('k value',fontsize='x-large')
+# # plt.ylabel('Model inertia',fontsize='x-large')
+# # plt.plot(k_range,inertia,color='r')
+# # plt.show()
+
+# # plotting the 'elbow curve'
+# # Used to determine the number of clusters to use
+# fig = px.line(x=k_range, y=inertia)
+# plot(fig)
+    
+    
+# trades = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
+# holdings = pd.read_sql_table("holdings", con=engine, index_col='index')
+
+# lis = trades['Ticker Symbol'].value_counts().reset_index().rename(columns={'Ticker Symbol':'Executions', 'index':'Ticker Symbol' })
+
+# holdings = holdings.merge(lis, on='Ticker Symbol', how='left')
+
+# fig = px.scatter(holdings, y="Gains", x="Executions", hover_data=['Ticker Symbol'])
+# plot(fig)
+
+# holdings = holdings[['Gross Returns', 'Executions']]
+# holdings = holdings.dropna() # Cannot provide missing values to kmeans
+
+# df = holdings.copy()
+
+# # scaling the data
+# from sklearn.preprocessing import StandardScaler
+
+# scaler = StandardScaler()
+# df_values = scaler.fit_transform(df.values)
+
+# # printing pre-processed data
+# print(df_values)
+
+
+# from sklearn.cluster import KMeans
+# km_model = KMeans(n_clusters=3).fit(df_values)
+
+# clusters = km_model.labels_
+
+# df['cluster'] = clusters
+# df['cluster'] = df['cluster'].astype(str)
+# df = df.reset_index().rename(columns={'index':'Ticker'})
+# df
+
+# fig = px.scatter(df, y="Gross Returns", x="Executions", color="cluster", hover_data=['Ticker'])
+# plot(fig)
+
+def vis1(filters='Returns'):
+    
+    seasonality = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
+
+    seasonality['weekday'] = seasonality['Trading day'].apply(lambda x :calendar.day_name[x.weekday()])
+    
+    seasonality['Trading_time'] = pd.to_timedelta(seasonality['Trading time'])
+    seasonality['Trading_time'] = seasonality['Trading_time'].apply(lambda x : int(x.seconds /3600))
+    
+    s_buys = seasonality[seasonality['Type'] == 'Buy']
+    s_sells = seasonality[seasonality['Type'] == 'Sell']
+    
+    s_buys['Trading_time'] = pd.to_timedelta(s_buys['Trading time'])
+    s_buys['Trading_time'] = s_buys['Trading_time'].apply(lambda x : int(x.seconds /3600))
+    s_buys = s_buys[['weekday','Trading_time']]
+    s_buys = s_buys.groupby(['weekday','Trading_time']).size().reset_index().rename(columns={0:'Buy Count'})
+    
+    s_sells['Trading_time'] = pd.to_timedelta(s_sells['Trading time'])
+    s_sells['Trading_time'] = s_sells['Trading_time'].apply(lambda x : int(x.seconds /3600))
+    s_sells = s_sells[['weekday','Trading_time', 'Result']]
+    s_sells = s_sells.groupby(['weekday','Trading_time']).agg(['sum','count']).reset_index()
+    s_sells.columns = ['weekday', 'Trading_time', 'Returns', 'Sell Count']
+    
+    seasonality_df = seasonality.groupby(['weekday','Trading_time']).size().reset_index().rename(columns={0:'Count'})
+    
+    seasonality_df = seasonality_df.merge(s_buys, on=['weekday','Trading_time'], how='left').merge(s_sells, on=['weekday','Trading_time'], how='left')
+    
+    seasonality_df['pct_buy'] = seasonality_df['Buy Count'] / seasonality_df['Count']
+    
+    seasonality_df['Trading_time'] = [f'0{x}:00' if x < 10 else f'{x}:00' for x in seasonality_df['Trading_time']]
+    
+    seasonality_df['Returns'] = seasonality_df['Returns'].fillna(0)
+    
+    crange = [-100,100] if filters == 'Returns' else [0,1]
+    mpoint = 0 if filters == 'Returns' else 0.5
+    
+    fig = px.scatter(seasonality_df, y="weekday", x="Trading_time",
+	         size="Count", color=filters, color_continuous_scale='RdBu', color_continuous_midpoint=mpoint,
+             size_max=40, range_color=crange
+                 )
+
+    fig.update_yaxes(title='Weekday', categoryorder='array', categoryarray= ['Friday', 'Thursday', 'Wednesday', 'Tuesday', 'Monday'])
+    #fig.update_yaxes(categoryorder='array', categoryarray= ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])
+    fig.update_xaxes(categoryorder='array', categoryarray= [f'0{x}:00' if x < 10 else f'{x}:00' for x in range(7,21)])
+    fig.layout.yaxis.showgrid=False
+    fig.layout.xaxis.showgrid=False
+    
+    return fig
+
+def chart(ticker):
+
+    #all_212_equities = pd.read_csv('all_212_equities.csv')
+    
+    all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
+
+    market = all_212_equities[all_212_equities['INSTRUMENT'] == ticker]['MARKET NAME'].values[0] 
+    
+    buys, sells = get_buy_sell(ticker)
+    
+    start = datetime(2020, 2, 7)
+    end = datetime.now()    
+        
+    yf_symbol = get_yf_symbol(market, ticker)   
+    
+    index = web.DataReader(yf_symbol, 'yahoo', start, end)
+    index = index.reset_index()
+    
+    ## Candlestick Graph
+    fig = go.Figure(data=[go.Candlestick(x=index['Date'],
+                    open=index['Open'],
+                    high=index['High'],
+                    low=index['Low'],
+                    close=index['Adj Close'],
+                    name='Stock')])
+    
+    # Buys
+    fig.add_trace(go.Scatter(x=sells['Trading day'], y=sells['Execution_Price'],
+                        mode='markers',
+                        name='Sell point',
+                        marker_symbol='triangle-down',
+                        #marker=dict(color='#ff7f0e')
+                        marker=dict(size=12,
+                                    line=dict(width=2,
+                                              color='DarkSlateGrey')),
+                        ))
+    
+    # Sells
+    fig.add_trace(go.Scatter(x=buys['Trading day'], y=buys['Execution_Price'],
+                        mode='markers',
+                        name='Buy point',
+                        marker_symbol='triangle-up',
+                        #marker=dict(color='#1f77b4')
+                        marker=dict(size=12,
+                                    line=dict(width=2,
+                                              color='DarkSlateGrey')),
+                        ))
+    
+    fig.update_layout(hovermode="x unified", title=f'{ticker} Buy/Sell points') # Currently plotly doesn't support hover for overlapping points in same trace
+    
+    plot(fig)
+    
+chart('AMC')
+
+def line_chart(ticker):
+
+    #all_212_equities = pd.read_csv('all_212_equities.csv')
+    
+    all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
+
+    market = all_212_equities[all_212_equities['INSTRUMENT'] == ticker]['MARKET NAME'].values[0] 
+    
+    buys, sells = get_buy_sell(ticker)
+    
+    start = datetime(2020, 2, 7)
+    end = datetime.now()    
+        
+    yf_symbol = get_yf_symbol(market, ticker)   
+    
+    index = web.DataReader(yf_symbol, 'yahoo', start, end)
+    index = index.reset_index()
+    
+    ## Candlestick Graph
+    fig = go.Figure(data=[go.Scatter(x=index['Date'], y=index['Adj Close'], 
+                        mode='lines', name='Closing price')])
+    
+    # Buys
+    fig.add_trace(go.Scatter(x=sells['Trading day'], y=sells['Execution_Price'],
+                        mode='markers',
+                        name='Sell point',
+                        #marker=dict(color='#ff7f0e')
+                        marker=dict(size=7,
+                                    line=dict(width=2,
+                                              color='DarkSlateGrey')),
+                        ))
+    
+    # Sells
+    fig.add_trace(go.Scatter(x=buys['Trading day'], y=buys['Execution_Price'],
+                        mode='markers',
+                        name='Buy point',
+                        #marker=dict(color='#1f77b4')
+                        marker=dict(size=7,
+                                    line=dict(width=2,
+                                              color='DarkSlateGrey')),
+                        ))
+    
+    fig.update_layout(hovermode="x unified", title=f'{ticker} Buy/Sell points') # Currently plotly doesn't support hover for overlapping points in same trace
+    
+    plot(fig)    
+
+
+def performance_chart_shape(ticker='TSLA'):
+
+    #ticker = 'XOS'
+    
+    all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
+    
+    try:
+        market = all_212_equities[all_212_equities['INSTRUMENT'] == ticker]['MARKET NAME'].values[0] 
+        yf_symbol = get_yf_symbol(market, ticker)   
+    except:
+        print("Can't find ticker")
+        yf_symbol = ticker
+    
+    start = datetime(2020, 2, 7)
+    end = datetime.now()    
+    
+    #index = web.DataReader(yf_symbol, start, end)
+    
+    yf.pdr_override()
+    index = web.get_data_yahoo(yf_symbol, start=start, end=end)
+    
+    index = index.reset_index()
+    
+    # cache tesla data because function takes too long
+    # Heroku has a 30sec timeout
+    
+    portfolio = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
+                
+    if len(portfolio[portfolio['Ticker Symbol'] == ticker]) > 150: 
+        
+        # data = pd.read_csv(f'cached_data/{ticker}.csv')
+        data = pd.read_sql_table(f'{ticker}', con=engine, index_col='index')
+        
+        buys = data[data['Type']=='Buy']
+        sells = data[data['Type']=='Sell']
+        
+        # a = buys.append(sells)
+        # a.to_csv(f'cached_data/{ticker}.csv')
+        # a.to_sql(f'{ticker}', engine, if_exists='replace')
+        
+    else:
+    
+        buys, sells = get_buy_sell(ticker) 
+        
+        index['Midpoint'] = (index['High'] + index['Low']) / 2
+        
+        buy_target = []
+        sell_target = []
+        
+        for i, row in buys.iterrows():
+            
+            try:
+                mid = index[index['Date'] == row['Trading day']]['Midpoint'].values[0]
+                
+                if row['Execution_Price'] < mid:
+                    buy_target.append(1)
+                else:
+                    buy_target.append(0)
+            except:   
+                # Missing data from yahoo finance
+                print(f'Missing data {row}')
+        
+        for i, row in sells.iterrows():
+            
+            try:
+                mid = index[index['Date'] == row['Trading day']]['Midpoint'].values[0]
+                
+                if row['Execution_Price'] > mid:
+                    sell_target.append(1)
+                else:
+                    sell_target.append(0)
+            except:
+                print(f'Missing data {row}')
+    
+        
+        buys['Target'] = buy_target
+        sells['Target'] = sell_target
+
+    ## Discrete color graph
+    
+    main_fig = make_subplots(specs=[[{"secondary_y": True}]])
+    
+    fig = go.Figure(data=[go.Candlestick(x=index['Date'],
+                    open=index['Open'],
+                    high=index['High'],
+                    low=index['Low'],
+                    close=index['Adj Close'],
+                    name='Stock')])
+    
+    # fig = go.Candlestick(x=index['Date'],
+    #             open=index['Open'],
+    #             high=index['High'],
+    #             low=index['Low'],
+    #             close=index['Adj Close'],
+    #             name='Stock')
+    
+    # Must be a string for plotly to interpret numeric values as a discrete value
+    # https://plotly.com/python/discrete-color/
+    sells['Target'] = sells['Target'].astype(str)
+    buys['Target'] = buys['Target'].astype(str)
+        
+    if len(sells) > 0:
+        
+        fig1 = px.scatter(sells, x='Trading day', y='Execution_Price', color='Target')
+    
+        for x in fig1.data:
+            if x['legendgroup'] == '1':
+                x['marker'] =  {'color':'#3D9970', 'line': {'width': 2},'size': 12, 'symbol': 'triangle-down'}
+                x['name'] = 'Successful Sell Point'
+                fig.add_trace(x)
+            elif x['legendgroup'] == '0':
+                x['marker'] =  {'color':'#E24C4F', 'line': {'width': 2}, 'size': 12, 'symbol': 'triangle-down'}
+                x['name'] = 'Unsuccessful Sell Point'
+                fig.add_trace(x)
+    
+    if len(buys) > 0:
+
+        fig2 = px.scatter(buys, x='Trading day', y='Execution_Price', color='Target')
+        #fig2.update_traces(marker=dict(color='blue'))
+        #fig2.update_traces(marker=dict(color='#30C296', size=7, line=dict(width=2, color='DarkSlateGrey')))
+        
+        for x in fig2.data:
+            if x['legendgroup'] == '1':
+                x['marker'] =  {'color':'#3D9970', 'line': {'width': 2},'size': 12, 'symbol': 'triangle-up'}
+                x['name'] = 'Successful Buy Point'
+                fig.add_trace(x)
+            elif x['legendgroup'] == '0':
+                x['marker'] =  {'color':'#E24C4F', 'line': {'width': 2},'size': 12, 'symbol': 'triangle-up'}
+                x['name'] = 'Unsuccessful Buy Point'
+                fig.add_trace(x)
+    
+    for x in range(len(fig.data)):
+        main_fig.add_trace(fig.data[x], secondary_y=True)
+    
+    # include a go.Bar trace for volumes
+    volume_fig = go.Figure(go.Bar(x=index['Date'], y=index['Volume'], name='Volume'))
+    volume_fig.update_traces(marker_color='rgb(158,202,225)', opacity=0.6)
+    
+    main_fig.add_trace(volume_fig.data[0], secondary_y=False)
+    
+    main_fig.update_layout(hovermode="x unified", title=f'{ticker} Stock Graph', 
+                    #   legend=dict(
+                    #         yanchor="top",
+                    #         y=0.99,
+                    #         xanchor="left",
+                    #         x=0.01
+                    # )
+                    # showlegend=False
+                    )
+    
+    main_fig.layout.yaxis1.showgrid=False
+
+    #plot(main_fig)
+    
+    # count = buys['Target'].value_counts().add(sells['Target'].value_counts(),fill_value=0)
+    # percentage = count[1]/count.sum() *100
+    # percentage = '{:.2f}'.format(percentage)
+    
+    return fig_layout(main_fig) #, percentage
 
 
 

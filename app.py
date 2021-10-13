@@ -258,7 +258,7 @@ insight_main = [
                   
                   dbc.Row(
                       [
-                            html.H4('Treemap of trades/returns aggregated by Sector and Industry', style={'color':'white'},),
+                            html.H4('Treemap of trades/returns aggregated by Sector and Industry', style={'color':'white'}),
                             html.Br(),
                             dcc.RadioItems(
                             options=[
@@ -272,6 +272,30 @@ insight_main = [
                             ),
                             html.Div(style={'margin':'20px'}),
                             dbc.Col(dcc.Graph(id='vis4', figure=vis4()), width=12),
+                      ], className = 'data-row'
+                  ),
+                  
+                  dbc.Row(
+                      [
+                          dbc.Col(
+                              [
+                                  html.Div(
+                                      [
+                                            html.H4("Trade volumes by day and hour of week", style={'color':'white'}),
+                                            dcc.RadioItems(
+                                            options=[
+                                                {'label': 'Profit/Loss', 'value': 'Returns'},
+                                                {'label': 'Buy/Sell', 'value': 'pct_buy'},
+                                            ],
+                                            value='Returns',
+                                            labelStyle={'display': 'inline-block'},
+                                            id='filters'
+                                            ),
+                                            dcc.Graph(id='vis1', figure=vis1()),
+                                      ]
+                                  )
+                               
+                              ], width=12),
                       ], className = 'data-row'
                   ),
                   
@@ -593,6 +617,11 @@ def event_b(chart):
 def event_g(colour):
     return vis4(colour)
 
+@app.callback(Output('vis1','figure'), 
+              [Input("filters", "value")])
+def event_k(choice):
+    return vis1(choice)
+
 def Homepage():
     return html.Div([
             body,
@@ -610,9 +639,9 @@ data that was generated when the Dash app was first initialised
 app.layout = Homepage()
 
 if __name__ == '__main__':
-    #app.run_server(debug=True, threaded=True, use_reloader=False) 
+    app.run_server(debug=True, threaded=True, use_reloader=False) 
     #app.run_server(debug=True, use_reloader=False, processes=4) # https://community.plotly.com/t/keep-updating-redrawing-graph-while-function-runs/8744
-    app.run_server()
+    #app.run_server()
 
 
 

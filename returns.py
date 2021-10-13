@@ -51,7 +51,9 @@ def returns():
     #trades = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
     
     trades = pd.read_sql_table("trades", con=engine, parse_dates=['Trading day']) # Want to parse index col for calculating results
-        
+    
+    trades.sort_values(['Trading day','Trading time'], inplace=True, ascending=True)
+
     trades['Result'] = ''
         
     #trades = trades[trades['Trading day'] == '2021-02-11']
@@ -73,7 +75,7 @@ def returns():
     
     for symbol in all_holdings['Ticker Symbol'].tolist():
         
-        #symbol = 'AIRG'
+        #symbol = 'BA.'
         
         df = trades[trades['Ticker Symbol'] == symbol]
                         
@@ -273,8 +275,10 @@ def returns():
     
     trades.drop(columns=['index'], inplace=True)
     trades.sort_values(['Trading day','Trading time'], inplace=True, ascending=True)
+    trades['Result'].replace('', 0.0, inplace=True)
+    trades['Result'] = trades['Result'].astype(float)
 
-    trades.to_sql('trades', engine, if_exists='replace') # Added results table
+    trades.to_sql('trades', engine, if_exists='replace') # Added results column
     
     sum(returns_df['Returns'])
     

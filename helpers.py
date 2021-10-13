@@ -38,7 +38,6 @@ email_user = os.getenv('GMAIL')
 email_pass = os.getenv('GMAIL_PASS') # Make sure 'Less secure app access' is turned on
 db_URI = os.getenv('AWS_DATABASE_URL')
 
-c = CurrencyRates()
 
 # port = 993
 
@@ -50,6 +49,7 @@ c = CurrencyRates()
 
 engine = create_engine(db_URI)
 
+# c = CurrencyRates()
 # date = '28/01/2021 14:42'
 # date_time_obj = datetime.strptime(date, '%d/%m/%Y %H:%M')
 # rate = c.get_rate('USD', 'GBP', date_time_obj)
@@ -310,27 +310,28 @@ def get_portfolio():
     
     for x in trades['YF_TICKER'].drop_duplicates():
         try:
-                        
+                            
             dic = yf.Ticker(x).info
             
-            sector = dic['sector']
+            sector = dic['sector'] if dic['sector'] else 'Uncategorised'
                         
-            industry = dic['industry']
+            industry = dic['industry'] if dic['industry'] else 'Uncategorised'
             
-            name = dic['shortName']
+            name = dic['longName']
             
             print(dic['sector'])
             
         except:
             sector = 'Uncategorised'
             industry = 'Uncategorised'
+            name = x
             
             print('Error:')
         
         categories[x] = {}
         categories[x]['Sector'] = sector
         categories[x]['Industry'] = industry
-        categories[x]['Name'] = x
+        categories[x]['Name'] = name
     
     def get_sectors(r):
         
@@ -419,9 +420,9 @@ def stock_split_adjustment(r):
     
     ticker = get_yf_symbol(market, r['Ticker Symbol'])
     
-    aapl = yf.Ticker(ticker)
-    split_df = aapl.splits.reset_index()
-    split = split_df[split_df['Date'] > r['Trading day']]['Stock Splits'].sum()
+    data = yf.Ticker(ticker) # Get stock data
+    split_df = data.splits.reset_index() # Extract stock split dates and values
+    split = split_df[split_df['Date'] > r['Trading day']]['Stock Splits'].sum() # 
     
     if split > 0:
         r.Execution_Price = r.Execution_Price/split
