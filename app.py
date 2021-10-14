@@ -260,7 +260,6 @@ insight_main = [
                   dbc.Row(
                       [
                             html.H4('Treemap of trades/returns aggregated by Sector and Industry', style={'color':'white'}),
-                            html.Br(),
                             dcc.RadioItems(
                             options=[
                                 {'label': 'Red-Blue (Colourblind safe)', 'value': 'RdBu'},
@@ -278,24 +277,32 @@ insight_main = [
                   
                   dbc.Row(
                       [
+
+                            html.H4("Trade volumes by day and hour of week", style={'color':'white'}),
+                            dcc.RadioItems(
+                            options=[
+                                {'label': 'Profit/Loss', 'value': 'Returns'},
+                                {'label': 'Buy/Sell', 'value': 'pct_buy'},
+                            ],
+                            value='Returns',
+                            labelStyle={'display': 'inline-block'},
+                            id='filters',
+                            style={'color':'white'},
+                            ),
+                            dbc.Col(dcc.Graph(id='vis1', figure=vis1()), width=12),
+                                  
+                      ], className = 'data-row'
+                  ),
+                  
+                  dbc.Row(
+                      [
                           dbc.Col(
                               [
                                   html.Div(
                                       [
-                                            html.H4("Trade volumes by day and hour of week", style={'color':'white'}),
-                                            dcc.RadioItems(
-                                            options=[
-                                                {'label': 'Profit/Loss', 'value': 'Returns'},
-                                                {'label': 'Buy/Sell', 'value': 'pct_buy'},
-                                            ],
-                                            value='Returns',
-                                            labelStyle={'display': 'inline-block'},
-                                            id='filters'
-                                            ),
-                                            dcc.Graph(id='vis1', figure=vis1()),
-                                      ]
-                                  )
-                               
+                                          html.H4("Portfolio bubbles", style={'color':'white'}),
+                                          dcc.Graph(id='bubbles', figure=bubbles()),
+                                      ])
                               ], width=12),
                       ], className = 'data-row'
                   ),

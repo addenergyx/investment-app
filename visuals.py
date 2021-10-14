@@ -39,6 +39,9 @@ engine = create_engine(db_URI)
 # driver.close()
 # driver.quit()
 
+# List of colours to prevent plotly repeating colours in plots
+colours = px.colors.qualitative.G10 + px.colors.qualitative.Plotly + px.colors.qualitative.Light24 + px.colors.qualitative.Dark24 + px.colors.qualitative.Alphabet
+
 def current_price(r):
     print(r['YF_TICKER'])
     if time(hour=9, minute=0) < datetime.now().time() < time(hour=14, minute=30) or time(hour=21) < datetime.now().time() < time(hour=22):
@@ -1245,11 +1248,33 @@ def performance_chart_shape(ticker='TSLA'):
     return fig_layout(main_fig) #, percentage
 
 
-
-
-
-
-
+def bubbles():
+    
+    trades = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
+    
+    ace = trades.groupby(['Ticker Symbol']).sum().reset_index() # Sum of result
+    base = trades.groupby(['Ticker Symbol']).count().reset_index() # Number of executions for a given day
+    
+    base['Executions'] = base['Result']
+        
+    df = ace.merge(base[['Ticker Symbol', 'Executions']], on=['Ticker Symbol'])
+    
+    df = df.merge(trades[['Ticker Symbol', 'Sector', 'Industry']], on=['Ticker Symbol'])  
+        
+    df.drop_duplicates(inplace=True)
+    
+    fig = px.scatter(df, x="Shares", y="Result", size="Executions", color="Sector", hover_name="Ticker Symbol",
+               log_x=True, size_max=55, color_discrete_sequence=colours#, range_x=[100,100000], range_y=[25,90]
+               )
+    
+    fig.update_layout( paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)', font_color="#848EA9",showlegend=False)   
+    
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#353943', zeroline=True, zerolinewidth=2, zerolinecolor='#848EA9')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#353943', zeroline=True, zerolinewidth=2, zerolinecolor='#848EA9')
+    
+    #plot(fig)
+    
+    return fig
 
 
 
