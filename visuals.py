@@ -1143,6 +1143,8 @@ def bubbles():
 
 def animated_bubbles(x='Total cost', y='Return', size='Count', colour='Sector', logs=[]):
     
+    ## Create dataset
+    
     trades = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
 
     ace = trades.groupby(['Ticker Symbol', 'Trading day']).sum().reset_index() # Sum of result
@@ -1161,6 +1163,8 @@ def animated_bubbles(x='Total cost', y='Return', size='Count', colour='Sector', 
     points = pd.DataFrame(columns=df.columns)
         
     for name, group in grouped:
+       
+        print(name)    
         
         group['Trading day'] = pd.to_datetime(group['Trading day'], format='%Y-%m-%d', dayfirst=True)
         
@@ -1192,6 +1196,13 @@ def animated_bubbles(x='Total cost', y='Return', size='Count', colour='Sector', 
         
         points = points.append(df, ignore_index = True)
 
+    # points.to_sql('points', engine, if_exists='replace') # Added results column
+    # points.to_csv('points.csv', index=False)
+
+    ## Using cached dataset due to heroku timeout
+    
+    #points = pd.read_csv('https://raw.githubusercontent.com/addenergyx/investment-app/main/points.csv', parse_dates=['Trading day'], dayfirst=True)
+    
     points['Trading day'] = points['Trading day'].apply(lambda x: x.strftime('%d-%m-%Y'))
 
     fig = px.scatter(points, x=x, y=y, animation_frame="Trading day", animation_group="Ticker Symbol",
@@ -1214,7 +1225,7 @@ def animated_bubbles(x='Total cost', y='Return', size='Count', colour='Sector', 
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#353943', zeroline=True, zerolinewidth=2, zerolinecolor='#848EA9')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#353943', zeroline=True, zerolinewidth=2, zerolinecolor='#848EA9')
 
-    return plot(fig)
+    return fig
 
 
 def clustering_model():
