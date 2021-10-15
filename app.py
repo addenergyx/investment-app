@@ -429,20 +429,20 @@ ml_main = [
         ], className = 'data-row'
     ),
     
-    dbc.Row(
-        [
-            dbc.Col(
-                [
-                    html.Div(
-                        [
-                            html.H4("LSTM Model prediction of Tesla Stock", style={'color':'white'}),
-                            dcc.Loading(
-                                dcc.Graph(figure=ml_model(), id='support_2'),
-                            )
-                        ])
-                ], width=12),
-        ], className = 'data-row'
-    ),
+    # dbc.Row(
+    #     [
+    #         dbc.Col(
+    #             [
+    #                 html.Div(
+    #                     [
+    #                         html.H4("LSTM Model prediction of Tesla Stock", style={'color':'white'}),
+    #                         dcc.Loading(
+    #                             dcc.Graph(figure=ml_model(), id='support_2'),
+    #                         )
+    #                     ])
+    #             ], width=12),
+    #     ], className = 'data-row'
+    # ),
     
     ]
 
