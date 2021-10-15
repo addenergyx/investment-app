@@ -138,8 +138,8 @@ pandas_datareader==0.10.0
 yfinance==0.1.62
 python-dotenv==0.19.1
 scikit-learn==0.23.2
-keras==2.3.1
-tensorflow==2.6.0
+beautifulsoup4==4.10.0
 
 # Uncomment below when running locally
-# beautifulsoup4==4.10.0
+# keras==2.3.1
+# tensorflow==2.6.0
