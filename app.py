@@ -230,14 +230,15 @@ performance_side = [
         
         html.Div(
              [
+            html.Label('Chart:', style={'font-weight': 'bold', "margin": "0px"}),
             dcc.Dropdown(
               id='chart-dropdown',
               options=charts,
               value='Goals',
               clearable=False,
-              style={'margin-top':'100px'}
+              
             ),
-        ]),
+        ], style={'margin-top':'100px'}),
       
         # html.Div(
         #       [
@@ -252,14 +253,14 @@ performance_side = [
       
         html.Div(
              [
+            html.Label('Ticker:', style={'font-weight': 'bold', "margin": "0px"}),
             dcc.Dropdown(
               id='ticker-dropdown',
               options=tickers,
               value=tickers[0]['value'],
               searchable=True,
-              style={'margin-top':'50px'}
             ),
-        ]),
+        ], style={'margin-top':'50px'}),
     ]
 
 insight_side = [
@@ -422,6 +423,21 @@ ml_main = [
                             #html.H4("Portfolio bubbles", style={'color':'white'}),
                             dcc.Loading(
                                 dcc.Graph(id='support'),
+                            )
+                        ])
+                ], width=12),
+        ], className = 'data-row'
+    ),
+    
+    dbc.Row(
+        [
+            dbc.Col(
+                [
+                    html.Div(
+                        [
+                            html.H4("LSTM Model prediction of Tesla Stock", style={'color':'white'}),
+                            dcc.Loading(
+                                dcc.Graph(figure=ml_model(), id='support_2'),
                             )
                         ])
                 ], width=12),
@@ -653,8 +669,13 @@ def event_a(ticker):
 @app.callback(Output('support','figure'), 
               [Input("cluster", "clickData")])
 def event_l(click):
-    print(click['points'][0]['customdata'][0])    
     return performance_chart(click['points'][0]['customdata'][0])
+
+# @app.callback(Output('support_2','figure'), 
+#               [Input("cluster", "clickData")])
+# def event_x(click):
+#     print(click['points'][0])    
+#     return performance_chart(click['points'][0]['customdata'][0][1])
 
 @app.callback(Output('animation_bubbles','figure'), 
               [Input("xaxis-dropdown", "value"), Input("yaxis-dropdown", "value"), 
