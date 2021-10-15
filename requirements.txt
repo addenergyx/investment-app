@@ -140,4 +140,4 @@ beautifulsoup4==4.10.0
 python-dotenv==0.19.1
 scikit-learn==0.23.2
 keras==2.4.3
-tensorflow==2.3.0
+tensorflow==2.6.0
