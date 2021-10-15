@@ -26,6 +26,8 @@ from iexfinance.stocks import Stock
 #import time as t
 import calendar
 import numpy as np
+from pandas.tseries.holiday import USFederalHolidayCalendar as holidaycalendar
+from pandas.tseries.offsets import *
 
 load_dotenv(verbose=True, override=True)
 
@@ -600,143 +602,6 @@ def avg_stock_split_adjustment(r):
     return r
 
 
-# def ml_model():
-#     pytrend = TrendReq()
-
-#     keyword = 'tesla Stock'
-    
-#     end = datetime.now()
-#     start = datetime(end.year - 5, end.month, end.day)
-    
-#     ss = start.strftime('%Y-%m-%d')
-#     ee = end.strftime('%Y-%m-%d')
-    
-#     # 1 year follows price trend better than 5 year 
-#     # This  may be because the values are calculated on a scale from 0 to 100, 
-#     # where 100 is the timeframe with the most popularity as a fraction of total searches in the given period of time, 
-#     # a value of 50 indicates a time which is half as popular. 
-#     # A value of 0 indicates a location where there was not enough data for this term. 
-#     # Source →Google Trends.
-    
-#     # For my hypothesis I feel 1 year is more accurate due to influx of new traders due to corona
-#     # Old school traders rely on fundementals/technicals whereas newer trader trade on sentiment and momentum
-    
-#     pytrend.build_payload(kw_list=[keyword], timeframe=f'{ss} {ee}')
-#     df = pytrend.interest_over_time() # Weekly data
-#     df.reset_index(level=0, inplace=True)
-    
-#     df2 = dailydata.get_daily_data(keyword, start.year, start.month, end.year, end.month)
-#     df2.reset_index(level=0, inplace=True)
-#     df2 = df2.rename(columns={'date':'Date'})
-    
-#     index = web.DataReader('tsla', 'yahoo', start, end)
-#     index = index.reset_index()
-
-#     merged_df = pd.merge(index, df2, on="Date")
-
-#     model_df = merged_df[['Date', 'Open', 'Adj Close', 'Volume', merged_df.filter(regex='_unscaled$').columns[0]]]
-
-#     training_dataset = model_df[model_df['Date'] < datetime(2020, 11, 1)]
-#     test_data = model_df[model_df['Date'] >= datetime(2020, 11, 1)]
-    
-#     from sklearn.preprocessing import MinMaxScaler
-#     import numpy as np
-    
-#     ## Using normalisation as will be using sigmoid function as activation functionn of output layer
-#     sc = MinMaxScaler()
-#     training_data = sc.fit_transform(training_dataset.drop(['Date'], axis=1))
-#     training_data.shape[0]
-    
-#     window = 30
-    
-#     x_train = [training_data[i-window:i] for i in range(60, training_data.shape[0])]
-    
-#     # Open stock price
-#     y_train = [training_data[i, 0] for i in range(60, training_data.shape[0])]
-    
-#     x_train, y_train = np.array(x_train ),  np.array(y_train)
-    
-#     x_train.shape, y_train.shape
-    
-#     from keras.models import Sequential
-#     from keras.layers import LSTM, Dense, Dropout
-    
-#     ## Model architecture
-#     model = Sequential()
-    
-#     ## Chose 50 nodes for high dimensionality
-#     model.add(LSTM(50, return_sequences=True, input_shape=(x_train.shape[1], x_train.shape[2])))
-    
-#     # Dropout Regularisation to pervent overfitting. 20% is a common choice
-#     model.add(Dropout(0.2))
-    
-#     # Layers 2 - 3
-#     for x in range(2,4):
-#         print(f'Initalise layer {x}')
-#         model.add(LSTM(50, return_sequences=True))
-#         model.add(Dropout(0.2))
-    
-#     # Final layer
-#     model.add(LSTM(50))
-#     model.add(Dropout(0.2))
-    
-#     # Output layer
-#     model.add(Dense(1))
-    
-#     model.compile(loss="mean_squared_error", optimizer="adam") # Try RMWprop optimizer after
-    
-#     model.summary()
-    
-#     ## 32 recommended batch size
-#     model.fit(
-#         x_train, y_train, epochs=100, batch_size=32, verbose=1, validation_split=0.2 #, validation_data=(Xtest, ytest)
-#     ) # Loss progressively got better (lower)
-    
-#     ## https://machinelearningmastery.com/how-to-use-the-timeseriesgenerator-for-time-series-forecasting-in-keras/
-    
-#     ## Predictions ##
-    
-#     #stock_test_data = model_df[model_df.index >= len(training_data)]
-#     #dataset = model_df.drop(['Date'], axis=1)
-    
-#     # Adding last window days of training set to test set for LSTM
-#     total_test_data = pd.concat((training_dataset.tail(window), test_data), ignore_index = True).drop(['Date'], axis=1)
-    
-#     scaled_test_data = sc.transform(total_test_data)
-    
-#     #stock_test_data = test_data.drop(['Date'], axis=1)
-    
-#     x_test = [scaled_test_data[i-window:i] for i in range(window, scaled_test_data.shape[0])]
-#     y_test = [scaled_test_data[i, 0] for i in range(window, scaled_test_data.shape[0])]
-    
-#     x_test, y_test = np.array(x_test),  np.array(y_test)
-    
-#     x_test.shape, y_test.shape
-    
-#     y_pred = model.predict(x_test)
-    
-#     ## How to use inverse_transform in MinMaxScaler for a column in a matrix
-#     ## https://stackoverflow.com/questions/49330195/how-to-use-inverse-transform-in-minmaxscaler-for-a-column-in-a-matrix
-#     # invert predictions
-#     # Original scaler variable (sc) won't work as it expects a 2D array instead of the 1D y_pred array we are trying to parse.
-#     scale = MinMaxScaler()
-#     scale.min_, scale.scale_ = sc.min_[0], sc.scale_[0]
-#     y_pred = scale.inverse_transform(y_pred)
-#     y_test = test_data['Open']
-    
-#     y_pred  = [x[0] for x in y_pred.tolist()]
-    
-#     test_dates = pd.Series([training_dataset['Date'].iloc[-1]]).append(test_data['Date'], ignore_index=True)
-#     y_pred_graph =  [training_dataset['Open'].iloc[-1]] + y_pred
-#     y_test_graph = pd.Series([training_dataset['Open'].iloc[-1]]).append(y_test, ignore_index=True).tolist()
-    
-#     fig = go.Figure()
-#     fig.add_trace(go.Scatter(x=training_dataset['Date'], y=training_dataset['Open'], name='Past Stock Price'))
-#     fig.add_trace(go.Scatter(x=test_dates, y=y_pred_graph, name='Predicted Stock Price'))
-#     fig.add_trace(go.Scatter(x=test_dates, y=y_test_graph, name='Actual Stock Price'))
-#     fig.update_layout(title="Predicted vs Actual Stock Price", xaxis_title="Date", yaxis_title="Opening Price")
-    
-#     return fig
 
 
 def trades_chart():
@@ -1275,6 +1140,158 @@ def bubbles():
     #plot(fig)
     
     return fig
+
+def animated_bubbles(x='Total cost', y='Return', size='Count', colour='Sector', logs=[]):
+    
+    trades = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
+
+    ace = trades.groupby(['Ticker Symbol', 'Trading day']).sum().reset_index() # Sum of result
+    base = trades.groupby(['Ticker Symbol', 'Trading day']).count().reset_index() # Number of executions for a given day
+    
+    base['Count'] = base['Result']
+        
+    df = ace.merge(base[['Ticker Symbol', 'Trading day', 'Count']], on=['Ticker Symbol', 'Trading day'])
+    
+    df = df.merge(trades[['Ticker Symbol', 'Trading day', 'Sector', 'Industry']], on=['Ticker Symbol', 'Trading day'])  
+        
+    df.drop_duplicates(inplace=True)
+    
+    grouped = df.groupby('Ticker Symbol')
+
+    points = pd.DataFrame(columns=df.columns)
+        
+    for name, group in grouped:
+        
+        group['Trading day'] = pd.to_datetime(group['Trading day'], format='%Y-%m-%d', dayfirst=True)
+        
+        group['Return'] = group['Result'].cumsum()
+        group['Count'] = group['Count'].cumsum()
+        group['Total_cost'] = group['Total cost'].cumsum()
+        
+        group.index = pd.to_datetime(group['Trading day'])
+        
+        cal = holidaycalendar()
+        holidays = cal.holidays(start='2020-03-20', end='2021-10-13') # Holidays to be removed
+        
+        #group = group.drop(columns='Trading day')
+        
+        c = group.reindex(pd.date_range('2020-03-20', '2021-10-13', freq=BDay())).drop(columns='Trading day').reset_index()
+        
+        df = c[~c['index'].isin(holidays)].rename(columns={'index':'Trading day'})
+        
+        df['Ticker Symbol'] = name
+        
+        df[['Sector', 'Industry']] =  df[['Sector', 'Industry']].bfill().ffill()
+        
+        # zero fill up till first trade then forward fill
+        first_trade = df.notnull()['Shares'].idxmax()
+        df[:first_trade] = df[:first_trade].fillna(0)
+        
+        # Forward fill missing dates
+        df = df.ffill()
+        
+        points = points.append(df, ignore_index = True)
+
+    points['Trading day'] = points['Trading day'].apply(lambda x: x.strftime('%d-%m-%Y'))
+
+    fig = px.scatter(points, x=x, y=y, animation_frame="Trading day", animation_group="Ticker Symbol",
+        size=size, color=colour, hover_name="Ticker Symbol", color_discrete_sequence=colours,
+        #log_y=True,
+        size_max=100,
+        log_x= True if 'X' in logs else False,
+        log_y= True if 'Y' in logs else False,
+        )
+    
+    fig.update_xaxes(title_text=x, autorange=False)
+    fig.update_yaxes(title_text=y, autorange=False)
+
+    fig.update_layout( paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)', font_color="#848EA9", showlegend=False, 
+                      transition={
+                            'duration': 1000,
+                            'easing': 'cubic-in-out',
+                        })   
+    
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#353943', zeroline=True, zerolinewidth=2, zerolinecolor='#848EA9')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#353943', zeroline=True, zerolinewidth=2, zerolinecolor='#848EA9')
+
+    return plot(fig)
+
+
+def clustering_model():
+    
+    trades = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
+
+    #base = trades.groupby(['Ticker Symbol', 'Type']).count().reset_index() # Number of executions for a given day
+    
+    ace = trades.groupby(['Ticker Symbol']).sum().reset_index() # Sum of result
+    base = trades.groupby(['Ticker Symbol']).count().reset_index() # Number of executions for a given day
+    
+    base['Count'] = base['Result']
+        
+    df = ace.merge(base[['Ticker Symbol', 'Count']], on=['Ticker Symbol'])
+    
+    df = df.merge(trades[['Ticker Symbol', 'Sector', 'Industry', 'YF_TICKER', 'Name']], on=['Ticker Symbol'])  
+        
+    df.drop_duplicates(inplace=True)
+
+    # for col in df[['Count', 'Result', 'Total cost']]:
+    #     fig.add_trace(go.Box(y=df[col].values, name=df[col].name))
+  
+    # plot(fig)
+    
+    # df[['Shares', 'Count', 'Result', 'Total cost']].describe()
+    
+    # for x in ['Shares', 'Count', 'Result', 'Total cost']:
+    
+    #     Q1 = df[x].quantile(0.25)
+    #     Q3 = df[x].quantile(0.75)
+        
+    #     IQR = Q3 - Q1
+        
+    #     lower_range = Q1 - 1.5 * IQR
+    #     upper_range = Q3 + 1.5 * IQR
+        
+    #     print(df[(df[x]<lower_range) | (df[x]>upper_range)])
+    
+    # Outliers
+    df = df[df['Ticker Symbol'] != '3LTS']
+    df = df[df['Ticker Symbol'] != 'TSLA']
+    
+    copy = df[['Count', 'Result', 'Total cost', 'Shares']].copy()
+    copy.index = df['Ticker Symbol'].copy()
+    
+    # scaling the data
+    from sklearn.preprocessing import StandardScaler
+    
+    scaler = StandardScaler()
+    df_values = scaler.fit_transform(copy.values)
+    
+    # printing pre-processed data
+    # print(df_values)
+
+    from sklearn.cluster import KMeans
+    km_model = KMeans(n_clusters=2).fit(df_values)
+    
+    clusters = km_model.labels_
+    
+    copy['cluster'] = clusters
+    copy['cluster'] = copy['cluster'].astype(str)
+    copy = copy.reset_index()
+    copy
+    
+    fig = px.scatter(copy, y="Result", x="Count", color="cluster", hover_data=['Ticker Symbol'], log_y=True)
+    
+    return fig
+
+
+
+
+
+
+
+
+
+
 
 
 

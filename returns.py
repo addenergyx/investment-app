@@ -279,7 +279,8 @@ def returns():
     trades['Result'] = trades['Result'].astype(float)
 
     trades.to_sql('trades', engine, if_exists='replace') # Added results column
-    
+    trades.to_csv('Investment trades.csv', index=False )
+
     sum(returns_df['Returns'])
     
     return trades

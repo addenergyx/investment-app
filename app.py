@@ -82,45 +82,21 @@ def stats():
 
 summary = stats()
 
-# if time(hour=9, minute=0) < datetime.now().time() < time(hour=14, minute=30) or time(hour=21) < datetime.now().time() < time(hour=22):
-#     interval = 240000
-# else:
-#     interval = 120000
+charts = [{'label':str(x), 'value': x} for x in ['Goals', 'Monthly', 'Dividends', 'Cumulative', 'Profit/Loss', 'Daily', 'Weekly', 'Yearly', 'Quarterly', 'Fiscal Year']]
+maps = [{'label':str(x), 'value': x} for x in ['Day', 'Portfolio']]
+axis = [{'label':str(x), 'value': x} for x in ['Shares', 'Total cost','Return','Count', 'Sector', 'Industry']]
 
-# def update_news(ticker):
-#     # Init
-#     newsapi = NewsApiClient(api_key=os.getenv('NEWS_API_KEY'))
-    
-#     # /v2/top-headlines
-#     top_headlines = newsapi.get_top_headlines(q=ticker,
-#                                               #sources='google-news',
-#                                               language='en',
-#                                               #country='gb'
-#                                               )
-    
-#     articles = top_headlines['articles']
-    
-#     titles = []
-#     urls = []
-#     for a in articles:
-#         titles.append(a['title'])
-#         urls.append(a['url'])
-    
-#     d = {'Title':titles,'Url':urls}
-    
-#     news_df = pd.DataFrame(d)
+def company(x):
+    try:
+        company = equities[equities['INSTRUMENT'] == x]['COMPANY'].values[0]
+        dic = {'label': f'{company} ({x})', 'value': x}
+    except:
+        dic = {'label': str(x), 'value': x}
+    return dic
 
-#     return news_df
-
-# df = update_news('BFT')
+tickers = [company(x) for x in portfolio['Ticker Symbol'].drop_duplicates()]
 
 app.title = 'Investments'
-
-colours = {
-            'remaining':'#1FDBB5',
-            'principal':'#F54784',
-            'interest':'#FFAC51'
-          }
 
 graph_card = [
                 html.Div([            
@@ -190,7 +166,7 @@ performance_main = [
                       
                   dbc.Row(
                       [
-                          html.H6('Current holdings day Result(%)', style={'color':'white'}),
+                          html.H6('Current holdings day Result (%)', style={'color':'white'}),
                           dcc.RadioItems(
                            options=[
                                {'label': 'Red-Blue (Colourblind safe)', 'value': 'RdBu'},
@@ -207,7 +183,7 @@ performance_main = [
                   
                    dbc.Row(
                        [
-                           html.H6('Current holdings lifetime Result(%)', style={'color':'white'}),
+                           html.H6('Current holdings lifetime Result (%)', style={'color':'white'}),
                            dbc.Col(html.Div(map_cardb), width=12),
                        ], className = 'data-row'
                    ),
@@ -249,6 +225,102 @@ performance_main = [
                   html.Div(id='container-button-basic', hidden=True)
                  
               ]
+
+performance_side = [
+        
+        html.Div(
+             [
+            dcc.Dropdown(
+              id='chart-dropdown',
+              options=charts,
+              value='Goals',
+              clearable=False,
+              style={'margin-top':'100px'}
+            ),
+        ]),
+      
+        # html.Div(
+        #       [
+        #      dcc.Dropdown(
+        #        id='map-dropdown',
+        #        options=maps,
+        #        value='Day',
+        #        clearable=False,
+        #        style={'margin-top':'50px'}
+        #      ),
+        #  ]), 
+      
+        html.Div(
+             [
+            dcc.Dropdown(
+              id='ticker-dropdown',
+              options=tickers,
+              value=tickers[0]['value'],
+              searchable=True,
+              style={'margin-top':'50px'}
+            ),
+        ]),
+    ]
+
+insight_side = [
+        
+        html.Div(
+              [
+            html.Label('Colour:', style={'font-weight': 'bold', "margin": "0px"}),
+            dcc.Dropdown(
+              id='colour-dropdown',
+              options=axis,
+              value='Sector',
+              clearable=False,
+            ),
+        ], style={'margin-top':'60px'}),
+
+        html.Div(
+              [
+            html.Label('Size:', style={'font-weight': 'bold', "margin": "0px"}),
+              dcc.Dropdown(
+                id='size-dropdown',
+                options=axis,
+                value='Count',
+                clearable=False,
+              ),
+        ], style={'margin-top':'20px'}),
+
+        html.Div(
+              [
+              html.Label('Y-axis:', style={'font-weight': 'bold', "margin": "0px"}),
+              dcc.Dropdown(
+                id='yaxis-dropdown',
+                options=axis,
+                value='Return',
+                clearable=False,
+              ),
+        ], style={'margin-top':'20px'}),
+
+        html.Div(
+              [
+            html.Label('X-axis:', style={'font-weight': 'bold', "margin": "0px"}),
+            dcc.Dropdown(
+              id='xaxis-dropdown',
+              options=axis,
+              value='Total cost',
+              clearable=False,
+            ),
+        ], style={'margin-top':'20px'}),
+                
+        html.Div(
+              [
+            dcc.Checklist(
+                options=[
+                    {'label': 'log Y', 'value': 'Y'},
+                    {'label': 'log X', 'value': 'X'},
+                ],
+                value=['Y'],
+                labelStyle={'display': 'inline-block'},
+                id='boxes'
+            ),
+        ], style={'margin-top':'10px'}),
+    ]
 
 insight_main = [
                   dbc.Row(
@@ -307,9 +379,58 @@ insight_main = [
                       ], className = 'data-row'
                   ),
                   
+                  dbc.Row(
+                      [
+                          dbc.Col(
+                              [
+                                  html.Div(
+                                      [
+                                          #html.H4("Portfolio bubbles", style={'color':'white'}),
+                                          dcc.Loading(
+                                              dcc.Graph(id='animation_bubbles'),
+                                          )
+                                      ])
+                              ], width=12),
+                      ], className = 'data-row'
+                  ),
+                  
             ]
 
-ml_main = []
+ml_main = [
+    
+        dbc.Row(
+        [
+            dbc.Col(
+                [
+                    html.Div(
+                        [
+                            #html.H4("Portfolio bubbles", style={'color':'white'}),
+                            dcc.Loading(
+                                dcc.Graph(id='cluster', figure=clustering_model()),
+                            )
+                        ])
+                ], width=12),
+        ], className = 'data-row'
+    ),
+    
+    dbc.Row(
+        [
+            dbc.Col(
+                [
+                    html.Div(
+                        [
+                            #html.H4("Portfolio bubbles", style={'color':'white'}),
+                            dcc.Loading(
+                                dcc.Graph(id='support'),
+                            )
+                        ])
+                ], width=12),
+        ], className = 'data-row'
+    ),
+    
+    ]
+
+ml_side = []
 
 # Returns Top cell bar for header area
 # def get_top_bar_cell(cellTitle, cellValue):
@@ -404,16 +525,6 @@ def build_card(title, colour):
 
 app.config.suppress_callback_exceptions = True
 
-def company(x):
-    try:
-        company = equities[equities['INSTRUMENT'] == x]['COMPANY'].values[0]
-        dic = {'label': f'{company} ({x})', 'value': x}
-    except:
-        dic = {'label': str(x), 'value': x}
-    return dic
-
-tickers = [company(x) for x in portfolio['Ticker Symbol'].drop_duplicates()]
-
 # tickers = []
 # for x in portfolio['Ticker Symbol'].drop_duplicates():
 #     try:
@@ -423,9 +534,6 @@ tickers = [company(x) for x in portfolio['Ticker Symbol'].drop_duplicates()]
 #         tickers.append({'label': str(x), 'value': x})
 
 #tickers = [{'label':str(x), 'value': x} for x in portfolio['Ticker Symbol'].drop_duplicates()]
-
-charts = [{'label':str(x), 'value': x} for x in ['Goals', 'Monthly', 'Dividends', 'Cumulative', 'Profit/Loss', 'Daily', 'Weekly', 'Yearly', 'Quarterly', 'Fiscal Year']]
-maps = [{'label':str(x), 'value': x} for x in ['Day', 'Portfolio']]
 
 body = html.Div(
             [
@@ -445,53 +553,7 @@ body = html.Div(
                               
                               #html.Div(style={'margin':'200px'}),
                               
-                             html.Div(
-                                   [
-                                  dcc.Dropdown(
-                                    id='chart-dropdown',
-                                    options=charts,
-                                    value='Goals',
-                                    clearable=False,
-                                    style={'margin-top':'100px'}
-                                  ),
-                              ]),
-                            
-                              html.Div(
-                                    [
-                                   dcc.Dropdown(
-                                     id='map-dropdown',
-                                     options=maps,
-                                     value='Day',
-                                     clearable=False,
-                                     style={'margin-top':'50px'}
-                                   ),
-                               ]), 
-                            
-                              html.Div(
-                                   [
-                                  dcc.Dropdown(
-                                    id='ticker-dropdown',
-                                    options=tickers,
-                                    value=tickers[0]['value'],
-                                    searchable=True,
-                                    style={'margin-top':'50px'}
-                                  ),
-                              ]),
-                              
-                              # html.Div(
-                              #      [
-                              #     html.Button(
-                              #       'Update All',
-                              #       id='update-all-btn',
-                              #       style={'margin-top':'50px'}
-                              #     ),
-                              #     html.Button(
-                              #       'Update Portfolio',
-                              #       id='update-portfolio-btn',
-                              #       style={'margin-top':'50px'}
-                              #     ),
-                              # ]),
-                              
+                              html.Div(performance_side, id='side-panel-content')
                            ], id='side-panel', width=12, lg=2
                         ),
                       
@@ -552,6 +614,23 @@ def update_output(btn1, btn2, btn3):
     return performance_main
 
 @app.callback(
+    Output('side-panel-content', 'children'),
+    [Input('Performance-btn', 'n_clicks'), Input('Insight-btn', 'n_clicks'), Input('Machine-Learning-btn', 'n_clicks')])
+def update_side(btn1, btn2, btn3):
+    
+    changed_id = [p['prop_id'] for p in dash.callback_context.triggered][0]
+    print([p['prop_id'] for p in dash.callback_context.triggered])
+    
+    if 'Performance-btn' in changed_id:
+        return performance_side
+    elif 'Insight-btn' in changed_id:
+        return insight_side
+    elif 'Machine-Learning-btn' in changed_id:
+        return ml_side
+    return performance_side
+
+
+@app.callback(
     [Output('ticker-dropdown', 'options'), Output('full-data-card','children')],
     [Input('dropdown-interval', 'n_intervals')])
 def update_tickers(n_clicks):
@@ -568,6 +647,20 @@ def update_tickers(n_clicks):
               [Input("ticker-dropdown", "value")])
 def event_a(ticker):
     return performance_chart(ticker)
+
+@app.callback(Output('support','figure'), 
+              [Input("cluster", "clickData")])
+def event_l(click):
+    print(click['points'][0]['customdata'][0])    
+    return performance_chart(click['points'][0]['customdata'][0])
+
+@app.callback(Output('animation_bubbles','figure'), 
+              [Input("xaxis-dropdown", "value"), Input("yaxis-dropdown", "value"), 
+               Input("size-dropdown", "value"), Input("colour-dropdown", "value"),
+               Input("boxes", "value")])
+def event_z(x,y,size,colour,logs):
+    #print(logs)
+    return animated_bubbles(x,y,size,colour,logs)
 
 # @app.callback(Output('treemap-graph','figure'), 
 #               [Input("colours", "value")])
@@ -650,11 +743,6 @@ if __name__ == '__main__':
     app.run_server(debug=True, threaded=True, use_reloader=False) 
     #app.run_server(debug=True, use_reloader=False, processes=4) # https://community.plotly.com/t/keep-updating-redrawing-graph-while-function-runs/8744
     #app.run_server()
-
-
-
-
-
 
 
 
