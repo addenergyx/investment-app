@@ -136,7 +136,6 @@ dash==1.11.0
 plotly==4.14.3
 pandas_datareader==0.10.0
 yfinance==0.1.62
-beautifulsoup4==4.10.0
 python-dotenv==0.19.1
 scikit-learn==0.23.2
 keras==2.4.3
