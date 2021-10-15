@@ -1284,157 +1284,157 @@ def clustering_model():
     return fig
 
 
+# LSTM Model
 
+# def ml_model():
 
-def ml_model():
+#     leaderboard = pd.read_sql_table("leaderboard", con=engine, index_col='index', parse_dates=['Last_updated'])
 
-    leaderboard = pd.read_sql_table("leaderboard", con=engine, index_col='index', parse_dates=['Last_updated'])
+#     leads = pd.DataFrame(columns=leaderboard.columns)
 
-    leads = pd.DataFrame(columns=leaderboard.columns)
+#     grouped = leaderboard.groupby('Stock')
 
-    grouped = leaderboard.groupby('Stock')
-
-    for name, group in grouped:
+#     for name, group in grouped:
     
-        group['Date'] = pd.to_datetime(group['Date'], format='%d/%m/%Y', dayfirst=True)
+#         group['Date'] = pd.to_datetime(group['Date'], format='%d/%m/%Y', dayfirst=True)
         
-        group.index = pd.to_datetime(group.Date)
+#         group.index = pd.to_datetime(group.Date)
         
-        cal = holidaycalendar()
-        holidays = cal.holidays(start='2020-11-11', end='2021-09-09') # Holidays to be removed
+#         cal = holidaycalendar()
+#         holidays = cal.holidays(start='2020-11-11', end='2021-09-09') # Holidays to be removed
         
-        c = group.reindex(pd.date_range('2020-11-11', '2021-09-09', freq=BDay())).drop(columns='Date').reset_index()
+#         c = group.reindex(pd.date_range('2020-11-11', '2021-09-09', freq=BDay())).drop(columns='Date').reset_index()
         
-        df = c[~c['index'].isin(holidays)].rename(columns={'index':'Date'})
+#         df = c[~c['index'].isin(holidays)].rename(columns={'index':'Date'})
         
-        df['Stock'] = name
+#         df['Stock'] = name
         
-        leads = leads.append(df, ignore_index = True)
+#         leads = leads.append(df, ignore_index = True)
     
-    # a = trades[trades['Ticker Symbol'] == yf_ticker]
-    # name = a['Name'].iloc[0]
+#     # a = trades[trades['Ticker Symbol'] == yf_ticker]
+#     # name = a['Name'].iloc[0]
     
-    tesla = leads[leads['Stock'] == 'Tesla']
+#     tesla = leads[leads['Stock'] == 'Tesla']
     
-    # interpolate data to fill gaps
-    tesla.index = tesla['Date']
-    tesla['User_count'].interpolate(method='time', inplace=True)
-    tesla = tesla.reset_index(drop=True)
+#     # interpolate data to fill gaps
+#     tesla.index = tesla['Date']
+#     tesla['User_count'].interpolate(method='time', inplace=True)
+#     tesla = tesla.reset_index(drop=True)
     
     
-    #ticker = tesla['Stock'].iloc[0]
-    end = tesla['Date'].iloc[-1]
-    start = tesla['Date'].iloc[0]
+#     #ticker = tesla['Stock'].iloc[0]
+#     end = tesla['Date'].iloc[-1]
+#     start = tesla['Date'].iloc[0]
     
-    yf.pdr_override()
-    index = web.get_data_yahoo('TSLA', start=start, end=end)
-    index = index.reset_index()
+#     yf.pdr_override()
+#     index = web.get_data_yahoo('TSLA', start=start, end=end)
+#     index = index.reset_index()
     
-    df = index.merge(tesla, on=['Date'], how='left')
+#     df = index.merge(tesla, on=['Date'], how='left')
     
-    model_df = df[['Date', 'Open', 'Adj Close', 'Volume', 'User_count']]
+#     model_df = df[['Date', 'Open', 'Adj Close', 'Volume', 'User_count']]
     
-    training_dataset = model_df[model_df['Date'] < datetime(2021, 7, 20)]
-    test_data = model_df[model_df['Date'] >= datetime(2021, 7, 20)]
+#     training_dataset = model_df[model_df['Date'] < datetime(2021, 7, 20)]
+#     test_data = model_df[model_df['Date'] >= datetime(2021, 7, 20)]
     
-    from sklearn.preprocessing import MinMaxScaler
-    import numpy as np
+#     from sklearn.preprocessing import MinMaxScaler
+#     import numpy as np
     
-    ## Using normalisation as will be using sigmoid function as activation functionn of output layer
-    sc = MinMaxScaler()
-    training_data = sc.fit_transform(training_dataset.drop(['Date'], axis=1))
-    training_data.shape[0]
+#     ## Using normalisation as will be using sigmoid function as activation functionn of output layer
+#     sc = MinMaxScaler()
+#     training_data = sc.fit_transform(training_dataset.drop(['Date'], axis=1))
+#     training_data.shape[0]
     
-    window = 30
+#     window = 30
     
-    x_train = [training_data[i-window:i] for i in range(60, training_data.shape[0])]
+#     x_train = [training_data[i-window:i] for i in range(60, training_data.shape[0])]
     
-    # Open stock price
-    y_train = [training_data[i, 0] for i in range(60, training_data.shape[0])]
+#     # Open stock price
+#     y_train = [training_data[i, 0] for i in range(60, training_data.shape[0])]
     
-    x_train, y_train = np.array(x_train ),  np.array(y_train)
+#     x_train, y_train = np.array(x_train ),  np.array(y_train)
     
-    x_train.shape, y_train.shape
+#     x_train.shape, y_train.shape
     
-    from keras.models import Sequential
-    from keras.layers import LSTM, Dense, Dropout
+#     from keras.models import Sequential
+#     from keras.layers import LSTM, Dense, Dropout
     
-    ## Model architecture
-    model = Sequential()
+#     ## Model architecture
+#     model = Sequential()
     
-    ## Chose 50 nodes for high dimensionality
-    model.add(LSTM(50, return_sequences=True, input_shape=(x_train.shape[1], x_train.shape[2])))
+#     ## Chose 50 nodes for high dimensionality
+#     model.add(LSTM(50, return_sequences=True, input_shape=(x_train.shape[1], x_train.shape[2])))
     
-    # Dropout Regularisation to pervent overfitting. 20% is a common choice
-    model.add(Dropout(0.2))
+#     # Dropout Regularisation to pervent overfitting. 20% is a common choice
+#     model.add(Dropout(0.2))
     
-    # Layers 2 - 3
-    for x in range(2,4):
-        print(f'Initalise layer {x}')
-        model.add(LSTM(50, return_sequences=True))
-        model.add(Dropout(0.2))
+#     # Layers 2 - 3
+#     for x in range(2,4):
+#         print(f'Initalise layer {x}')
+#         model.add(LSTM(50, return_sequences=True))
+#         model.add(Dropout(0.2))
     
-    # Final layer
-    model.add(LSTM(50))
-    model.add(Dropout(0.2))
+#     # Final layer
+#     model.add(LSTM(50))
+#     model.add(Dropout(0.2))
     
-    # Output layer
-    model.add(Dense(1))
+#     # Output layer
+#     model.add(Dense(1))
     
-    model.compile(loss="mean_squared_error", optimizer="adam") # Try RMWprop optimizer after
+#     model.compile(loss="mean_squared_error", optimizer="adam") # Try RMWprop optimizer after
     
-    model.summary()
+#     model.summary()
     
-    ## 32 recommended batch size
-    model.fit(
-        x_train, y_train, epochs=100, batch_size=32, verbose=1, validation_split=0.2 #, validation_data=(Xtest, ytest)
-    ) # Loss progressively got better (lower)
+#     ## 32 recommended batch size
+#     model.fit(
+#         x_train, y_train, epochs=100, batch_size=32, verbose=1, validation_split=0.2 #, validation_data=(Xtest, ytest)
+#     ) # Loss progressively got better (lower)
     
-    ## https://machinelearningmastery.com/how-to-use-the-timeseriesgenerator-for-time-series-forecasting-in-keras/
+#     ## https://machinelearningmastery.com/how-to-use-the-timeseriesgenerator-for-time-series-forecasting-in-keras/
     
-    ## Predictions ##
+#     ## Predictions ##
     
-    #stock_test_data = model_df[model_df.index >= len(training_data)]
-    #dataset = model_df.drop(['Date'], axis=1)
+#     #stock_test_data = model_df[model_df.index >= len(training_data)]
+#     #dataset = model_df.drop(['Date'], axis=1)
     
-    # Adding last window days of training set to test set for LSTM
-    total_test_data = pd.concat((training_dataset.tail(window), test_data), ignore_index = True).drop(['Date'], axis=1)
+#     # Adding last window days of training set to test set for LSTM
+#     total_test_data = pd.concat((training_dataset.tail(window), test_data), ignore_index = True).drop(['Date'], axis=1)
     
-    scaled_test_data = sc.transform(total_test_data)
+#     scaled_test_data = sc.transform(total_test_data)
     
-    #stock_test_data = test_data.drop(['Date'], axis=1)
+#     #stock_test_data = test_data.drop(['Date'], axis=1)
     
-    x_test = [scaled_test_data[i-window:i] for i in range(window, scaled_test_data.shape[0])]
-    y_test = [scaled_test_data[i, 0] for i in range(window, scaled_test_data.shape[0])]
+#     x_test = [scaled_test_data[i-window:i] for i in range(window, scaled_test_data.shape[0])]
+#     y_test = [scaled_test_data[i, 0] for i in range(window, scaled_test_data.shape[0])]
     
-    x_test, y_test = np.array(x_test),  np.array(y_test)
+#     x_test, y_test = np.array(x_test),  np.array(y_test)
     
-    x_test.shape, y_test.shape
+#     x_test.shape, y_test.shape
     
-    y_pred = model.predict(x_test)
+#     y_pred = model.predict(x_test)
     
-    ## How to use inverse_transform in MinMaxScaler for a column in a matrix
-    ## https://stackoverflow.com/questions/49330195/how-to-use-inverse-transform-in-minmaxscaler-for-a-column-in-a-matrix
-    # invert predictions
-    # Original scaler variable (sc) won't work as it expects a 2D array instead of the 1D y_pred array we are trying to parse.
-    scale = MinMaxScaler()
-    scale.min_, scale.scale_ = sc.min_[0], sc.scale_[0]
-    y_pred = scale.inverse_transform(y_pred)
-    y_test = test_data['Open']
+#     ## How to use inverse_transform in MinMaxScaler for a column in a matrix
+#     ## https://stackoverflow.com/questions/49330195/how-to-use-inverse-transform-in-minmaxscaler-for-a-column-in-a-matrix
+#     # invert predictions
+#     # Original scaler variable (sc) won't work as it expects a 2D array instead of the 1D y_pred array we are trying to parse.
+#     scale = MinMaxScaler()
+#     scale.min_, scale.scale_ = sc.min_[0], sc.scale_[0]
+#     y_pred = scale.inverse_transform(y_pred)
+#     y_test = test_data['Open']
     
-    y_pred = [x[0] for x in y_pred.tolist()]
+#     y_pred = [x[0] for x in y_pred.tolist()]
     
-    test_dates = pd.Series([training_dataset['Date'].iloc[-1]]).append(test_data['Date'], ignore_index=True)
-    y_pred_graph =  [training_dataset['Open'].iloc[-1]] + y_pred
-    y_test_graph = pd.Series([training_dataset['Open'].iloc[-1]]).append(y_test, ignore_index=True).tolist()
+#     test_dates = pd.Series([training_dataset['Date'].iloc[-1]]).append(test_data['Date'], ignore_index=True)
+#     y_pred_graph =  [training_dataset['Open'].iloc[-1]] + y_pred
+#     y_test_graph = pd.Series([training_dataset['Open'].iloc[-1]]).append(y_test, ignore_index=True).tolist()
     
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=training_dataset['Date'], y=training_dataset['Open'], name='Past Stock Price'))
-    fig.add_trace(go.Scatter(x=test_dates, y=y_pred_graph, name='Predicted Stock Price'))
-    fig.add_trace(go.Scatter(x=test_dates, y=y_test_graph, name='Actual Stock Price'))
-    fig.update_layout(title="Predicted vs Actual Stock Price", xaxis_title="Date", yaxis_title="Opening Price")
+#     fig = go.Figure()
+#     fig.add_trace(go.Scatter(x=training_dataset['Date'], y=training_dataset['Open'], name='Past Stock Price'))
+#     fig.add_trace(go.Scatter(x=test_dates, y=y_pred_graph, name='Predicted Stock Price'))
+#     fig.add_trace(go.Scatter(x=test_dates, y=y_test_graph, name='Actual Stock Price'))
+#     fig.update_layout(title="Predicted vs Actual Stock Price", xaxis_title="Date", yaxis_title="Opening Price")
     
-    return fig
+#     return fig
 
 
 
