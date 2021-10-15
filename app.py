@@ -430,7 +430,7 @@ ml_main = [
     
     ]
 
-ml_side = []
+ml_side = [html.P('Click on a data point on the cluster plot to view more data')]
 
 # Returns Top cell bar for header area
 # def get_top_bar_cell(cellTitle, cellValue):
