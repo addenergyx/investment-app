@@ -1145,63 +1145,63 @@ def animated_bubbles(x='Total cost', y='Return', size='Count', colour='Sector', 
     
     ## Create dataset
     
-    trades = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
+    # trades = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
 
-    ace = trades.groupby(['Ticker Symbol', 'Trading day']).sum().reset_index() # Sum of result
-    base = trades.groupby(['Ticker Symbol', 'Trading day']).count().reset_index() # Number of executions for a given day
+    # ace = trades.groupby(['Ticker Symbol', 'Trading day']).sum().reset_index() # Sum of result
+    # base = trades.groupby(['Ticker Symbol', 'Trading day']).count().reset_index() # Number of executions for a given day
     
-    base['Count'] = base['Result']
+    # base['Count'] = base['Result']
         
-    df = ace.merge(base[['Ticker Symbol', 'Trading day', 'Count']], on=['Ticker Symbol', 'Trading day'])
+    # df = ace.merge(base[['Ticker Symbol', 'Trading day', 'Count']], on=['Ticker Symbol', 'Trading day'])
     
-    df = df.merge(trades[['Ticker Symbol', 'Trading day', 'Sector', 'Industry']], on=['Ticker Symbol', 'Trading day'])  
+    # df = df.merge(trades[['Ticker Symbol', 'Trading day', 'Sector', 'Industry']], on=['Ticker Symbol', 'Trading day'])  
         
-    df.drop_duplicates(inplace=True)
+    # df.drop_duplicates(inplace=True)
     
-    grouped = df.groupby('Ticker Symbol')
+    # grouped = df.groupby('Ticker Symbol')
 
-    points = pd.DataFrame(columns=df.columns)
+    # points = pd.DataFrame(columns=df.columns)
         
-    for name, group in grouped:
+    # for name, group in grouped:
        
-        print(name)    
+    #     print(name)    
         
-        group['Trading day'] = pd.to_datetime(group['Trading day'], format='%Y-%m-%d', dayfirst=True)
+    #     group['Trading day'] = pd.to_datetime(group['Trading day'], format='%Y-%m-%d', dayfirst=True)
         
-        group['Return'] = group['Result'].cumsum()
-        group['Count'] = group['Count'].cumsum()
-        group['Total_cost'] = group['Total cost'].cumsum()
+    #     group['Return'] = group['Result'].cumsum()
+    #     group['Count'] = group['Count'].cumsum()
+    #     group['Total_cost'] = group['Total cost'].cumsum()
         
-        group.index = pd.to_datetime(group['Trading day'])
+    #     group.index = pd.to_datetime(group['Trading day'])
         
-        cal = holidaycalendar()
-        holidays = cal.holidays(start='2020-03-20', end='2021-10-13') # Holidays to be removed
+    #     cal = holidaycalendar()
+    #     holidays = cal.holidays(start='2020-03-20', end='2021-10-13') # Holidays to be removed
         
-        #group = group.drop(columns='Trading day')
+    #     #group = group.drop(columns='Trading day')
         
-        c = group.reindex(pd.date_range('2020-03-20', '2021-10-13', freq=BDay())).drop(columns='Trading day').reset_index()
+    #     c = group.reindex(pd.date_range('2020-03-20', '2021-10-13', freq=BDay())).drop(columns='Trading day').reset_index()
         
-        df = c[~c['index'].isin(holidays)].rename(columns={'index':'Trading day'})
+    #     df = c[~c['index'].isin(holidays)].rename(columns={'index':'Trading day'})
         
-        df['Ticker Symbol'] = name
+    #     df['Ticker Symbol'] = name
         
-        df[['Sector', 'Industry']] =  df[['Sector', 'Industry']].bfill().ffill()
+    #     df[['Sector', 'Industry']] =  df[['Sector', 'Industry']].bfill().ffill()
         
-        # zero fill up till first trade then forward fill
-        first_trade = df.notnull()['Shares'].idxmax()
-        df[:first_trade] = df[:first_trade].fillna(0)
+    #     # zero fill up till first trade then forward fill
+    #     first_trade = df.notnull()['Shares'].idxmax()
+    #     df[:first_trade] = df[:first_trade].fillna(0)
         
-        # Forward fill missing dates
-        df = df.ffill()
+    #     # Forward fill missing dates
+    #     df = df.ffill()
         
-        points = points.append(df, ignore_index = True)
+    #     points = points.append(df, ignore_index = True)
 
     # points.to_sql('points', engine, if_exists='replace') # Added results column
     # points.to_csv('points.csv', index=False)
 
     ## Using cached dataset due to heroku timeout
     
-    #points = pd.read_csv('https://raw.githubusercontent.com/addenergyx/investment-app/main/points.csv', parse_dates=['Trading day'], dayfirst=True)
+    points = pd.read_csv('https://raw.githubusercontent.com/addenergyx/investment-app/main/points.csv', parse_dates=['Trading day'], dayfirst=True)
     
     points['Trading day'] = points['Trading day'].apply(lambda x: x.strftime('%d-%m-%Y'))
 
