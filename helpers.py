@@ -36,16 +36,18 @@ load_dotenv(verbose=True, override=True)
 
 email_user = os.getenv('GMAIL')
 email_pass = os.getenv('GMAIL_PASS') # Make sure 'Less secure app access' is turned on
-db_URI = os.getenv('AWS_DATABASE_URL')
 
+# db_URI = os.getenv('AWS_DATABASE_URL')
 
-# port = 993
+db_URI = os.getenv('ElephantSQL_DATABASE_URL')
 
-# SMTP_SERVER = "imap.gmail.com"
+port = 993
 
-# mail = imaplib.IMAP4_SSL(SMTP_SERVER)
+SMTP_SERVER = "imap.gmail.com"
 
-# mail.login(email_user, email_pass)
+mail = imaplib.IMAP4_SSL(SMTP_SERVER)
+
+mail.login(email_user, email_pass)
 
 engine = create_engine(db_URI)
 
@@ -128,7 +130,6 @@ def get_market(isin, symbol, old_symbol=''):
         old_symbol = symbol
         symbol = 'HYLN'
 
-
     markets = all_212_equities.query('ISIN==@isin and INSTRUMENT==@symbol')['MARKET NAME']
     
     if len(markets) == 0:
@@ -141,7 +142,7 @@ def get_market(isin, symbol, old_symbol=''):
     else:
         market = markets.values[0]
         #if len(market) == 0: print(len(market)) 
-    return old_symbol, market
+    return symbol, market
 
 def get_portfolio():
     
@@ -219,19 +220,6 @@ def get_portfolio():
     ## Split ISIN and stock, need ISIN because some companies have the same ticker symbol, ISIN is the uid
     trades[['Ticker Symbol', 'ISIN']] = trades['Ticker Symbol'].str.split('/', expand=True)
     
-    ## TODO: Temp fix by changing DTG to Jet2, Dartgroup changed their ticker symbol to JET2
-    trades['Ticker Symbol'].replace('DTG','JET2', inplace=True)
-    
-    # SPAC Meger name changes
-    trades['Ticker Symbol'].replace('STPK','STEM', inplace=True)
-    trades['Ticker Symbol'].replace('NPA','ASTS', inplace=True)
-    trades['Ticker Symbol'].replace('NGAC','XOS', inplace=True)
-    
-    ## Airbus changed their ticker symbol
-    trades['Ticker Symbol'].replace('AIRp', 'AIR', inplace=True)
-    
-    trades['Ticker Symbol'].replace('SHLL', 'HYLN', inplace=True) # Fixes wrong returns for 11/2/2021, note trading212 auto changes tickers in csv
-    
     trades['Trading day'] = pd.to_datetime(trades['Trading day'], format='%d-%m-%Y', dayfirst=True) #pd.to_datetime(trades["Trading day"]).dt.strftime('%m-%d-%Y')
     
     ## For getting ROI, Dataframe needs to be ordered in ascending order and grouped by Ticker Symbol
@@ -258,6 +246,9 @@ def get_portfolio():
     data['Type'] = data['Action'].str.split(' ').str[-1].str.capitalize()
     data['Trading day'] = pd.to_datetime(data['Trading day'], dayfirst=True)
     data['Price'] = data['Price / share'] / data['Exchange rate']
+    
+    # Change exchane rate to match email 
+    data['Exchange rate'] = 1/data['Exchange rate']
             
     # time missing seconds
     data['Trading time'] = pd.to_datetime(data['Trading time']) 
@@ -276,6 +267,49 @@ def get_portfolio():
     #trades = data.copy()
     
     trades = pd.concat([trades, data], ignore_index=True)
+    
+    ## TODO: Temp fix by changing DTG to Jet2, Dartgroup changed their ticker symbol to JET2
+    trades['Ticker Symbol'].replace('DTG','JET2', inplace=True)
+    
+    # SPAC Meger name changes
+    trades['Ticker Symbol'].replace('STPK','STEM', inplace=True)
+    trades['Ticker Symbol'].replace('NPA','ASTS', inplace=True)
+    trades['Ticker Symbol'].replace('NGAC','XOS', inplace=True)
+    trades['Ticker Symbol'].replace('SBE','CHPT', inplace=True)
+    trades['Ticker Symbol'].replace('CCIV','LCID', inplace=True)
+    trades['Ticker Symbol'].replace('FMCI','TTCF', inplace=True)
+    trades['Ticker Symbol'].replace('SHLL','HYLN', inplace=True)
+    trades['Ticker Symbol'].replace('FIII','ELMS', inplace=True)
+    trades['Ticker Symbol'].replace('CFII','VIEW', inplace=True)
+    trades['Ticker Symbol'].replace('BFT','PSFE', inplace=True) # Fixes wrong returns for 11/2/2021, note trading212 auto changes tickers in csv
+    trades['Ticker Symbol'].replace('BPC','CEG.L', inplace=True)
+    trades['Ticker Symbol'].replace('ACTC','PTRA', inplace=True)
+    trades['Ticker Symbol'].replace('FTR','FYBR', inplace=True)
+    trades['Ticker Symbol'].replace('GHIV','UWMC', inplace=True)
+    trades['Ticker Symbol'].replace('FTOC','PAYO', inplace=True)
+    trades['Ticker Symbol'].replace('TBA','IS', inplace=True)
+    trades['Ticker Symbol'].replace('PDAC','LICY', inplace=True)
+    trades['Ticker Symbol'].replace('THCB','MVST', inplace=True)
+    trades['Ticker Symbol'].replace('HOL','ASTR', inplace=True)
+    trades['Ticker Symbol'].replace('IPV','AEVA', inplace=True)
+    trades['Ticker Symbol'].replace('RAAC','BGRY', inplace=True)
+    trades['Ticker Symbol'].replace('LGVW','BFLY', inplace=True)
+    trades['Ticker Symbol'].replace('GIK','ZEV', inplace=True)
+    trades['Ticker Symbol'].replace('PCPL','ETWO', inplace=True)
+    trades['Ticker Symbol'].replace('INVU','ETWO', inplace=True)
+    trades['Ticker Symbol'].replace('GHVI','MTTR ', inplace=True)
+    trades['Ticker Symbol'].replace('VGAC','ME', inplace=True)
+    trades['Ticker Symbol'].replace('IPOE','SOFI', inplace=True)
+    trades['Ticker Symbol'].replace('FUSE','ML', inplace=True)
+    trades['Ticker Symbol'].replace('PACE','NRDY', inplace=True) 
+
+    trades['Ticker Symbol'].replace('AO.','AO', inplace=True)
+    
+    ## Airbus changed their ticker symbol
+    trades['Ticker Symbol'].replace('AIRp', 'AIR', inplace=True)
+    
+    # Fixes wrong returns for 11/2/2021, note trading212 auto changes tickers in csv
+    trades['Ticker Symbol'].replace('SHLL', 'HYLN', inplace=True)
     
     trades.sort_values(['Trading day','Trading time'], inplace=True, ascending=True) # Sort for returns.py
     
@@ -305,33 +339,33 @@ def get_portfolio():
         return r
     
     trades = trades.apply(get_sector, axis=1)
+    #A = trades[trades['Ticker'] == 'LCID']
     
     categories = {}
     
+    errors = []
+    
     for x in trades['YF_TICKER'].drop_duplicates():
-        try:
-                            
-            dic = yf.Ticker(x).info
+        
+        dic = yf.Ticker(x).info
+        
+        name = dic['longName'] if 'longName' in dic else x
+        
+        sector = dic['sector'] if 'sector' in dic else 'Uncategorised'
             
-            sector = dic['sector'] if dic['sector'] else 'Uncategorised'
-                        
-            industry = dic['industry'] if dic['industry'] else 'Uncategorised'
-            
-            name = dic['longName']
-            
-            print(dic['sector'])
-            
-        except:
-            sector = 'Uncategorised'
-            industry = 'Uncategorised'
-            name = x
-            
-            print('Error:')
+        industry = dic['industry'] if 'industry' in dic else 'Uncategorised'
+
+        print(name) if name is not x or None else print(f'Error: {x}')
+        
+        if name is x:
+            errors.append(name)
         
         categories[x] = {}
         categories[x]['Sector'] = sector
         categories[x]['Industry'] = industry
         categories[x]['Name'] = name
+    
+    print(errors)
     
     def get_sectors(r):
         
@@ -413,7 +447,7 @@ def get_portfolio():
     return trades
 
 #t = get_portfolio()
-
+    
 def stock_split_adjustment(r):
         
     market = get_market(r['ISIN'], r['Ticker Symbol'])[1] 
@@ -422,7 +456,7 @@ def stock_split_adjustment(r):
     
     data = yf.Ticker(ticker) # Get stock data
     split_df = data.splits.reset_index() # Extract stock split dates and values
-    split = split_df[split_df['Date'] > r['Trading day']]['Stock Splits'].sum() # 
+    split = split_df[split_df['Date'] >= r['Trading day']]['Stock Splits'].sum() # 
     
     if split > 0:
         r.Execution_Price = r.Execution_Price/split
@@ -541,7 +575,11 @@ def get_summary():
     summary_df.to_sql('summary', engine, if_exists='replace')
     summary_df.to_csv('Monthly Summary.csv', index=False )
     
+    print('Summary done')
+    
     return summary_df
+
+a = get_summary()
 
 def get_buy_sell(ticker):
     
@@ -663,8 +701,6 @@ def get_capital():
     capital = round(deposits - withdraws, 2)
     
     return capital
-
-
 
 
 

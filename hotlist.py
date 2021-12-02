@@ -29,7 +29,9 @@ load_dotenv(verbose=True, override=True)
 
 timestamp = date.today().strftime('%d-%m-%Y')
 
-db_URI = os.getenv('AWS_DATABASE_URL')
+db_URI = os.getenv('ElephantSQL_DATABASE_URL')
+
+# db_URI = os.getenv('AWS_DATABASE_URL')
 engine = create_engine(db_URI)
 
 ## Google authentication
@@ -52,7 +54,7 @@ drive = GoogleDrive(gauth)
 
 ## Using Long table as it's more flexible for this dataset
 ## Improve: use database instead of csv
-# leaderboard = pd.read_csv('leaderboard-03-09-2021.csv', parse_dates=['Date', 'Last_updated'], dayfirst=True) # Date format changes for some observations when reading csv unsure why
+# leaderboard = pd.read_csv('leaderboard.csv', parse_dates=['Date', 'Last_updated'], dayfirst=True) # Date format changes for some observations when reading csv unsure why
 # risers = pd.read_csv('risers-03-09-2021.csv', parse_dates=['Date', 'Last_updated'], dayfirst=True)
 # fallers = pd.read_csv('fallers-03-09-2021.csv', parse_dates=['Date', 'Last_updated'], dayfirst=True)
 

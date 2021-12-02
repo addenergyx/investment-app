@@ -18,14 +18,17 @@ from visuals import *
 from components import Fab
 import os
 from sqlalchemy import create_engine
-from jobs import updates
+#from jobs import updates
 import plotly.express as px
 #from live_portfolio import get_live_portfolio
 #from helpers import get_capital # Fix later, can't access gmail in heroku
 from datetime import time
 import time as t
 
-db_URI = os.getenv('AWS_DATABASE_URL')
+# db_URI = os.getenv('AWS_DATABASE_URL')
+
+db_URI = os.getenv('ElephantSQL_DATABASE_URL')
+
 engine = create_engine(db_URI)
 
 external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes.BOOTSTRAP,
@@ -87,11 +90,14 @@ maps = [{'label':str(x), 'value': x} for x in ['Day', 'Portfolio']]
 axis = [{'label':str(x), 'value': x} for x in ['Shares', 'Total cost','Return','Count', 'Sector', 'Industry']]
 
 def company(x):
-    try:
-        company = equities[equities['INSTRUMENT'] == x]['COMPANY'].values[0]
-        dic = {'label': f'{company} ({x})', 'value': x}
-    except:
+
+    company = portfolio[portfolio['Ticker Symbol'] == x]['Name'].values[0]
+    
+    if company is x:
         dic = {'label': str(x), 'value': x}
+    else:
+        dic = {'label': f'{company} ({x})', 'value': x}
+                
     return dic
 
 tickers = [company(x) for x in portfolio['Ticker Symbol'].drop_duplicates()]
@@ -657,7 +663,7 @@ def update_tickers(n_clicks):
     tickers = [company(x) for x in portfolio['Ticker Symbol'].drop_duplicates()]
     
     # portfolio = portfolio[['Ticker Symbol', 'Type', 'Shares', 'Price', 'Total amount', 'Trading day']]
-    portfolio = portfolio[['Ticker Symbol', 'Type', 'Shares', 'Price', 'Total cost', 'Trading day']]
+    portfolio = portfolio[['Ticker Symbol', 'Type', 'Shares', 'Execution_Price', 'Total cost', 'Trading day']]
 
     return tickers, build_table(portfolio)
     
