@@ -25,7 +25,7 @@ import plotly.express as px
 from datetime import time
 import time as t
 
-db_URI = os.getenv('AWS_DATABASE_URL')
+db_URI = os.getenv('ElephantSQL_DATABASE_URL')
 engine = create_engine(db_URI)
 
 external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes.BOOTSTRAP,
