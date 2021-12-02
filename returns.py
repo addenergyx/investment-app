@@ -30,7 +30,8 @@ from pytrends import dailydata
 
 load_dotenv(verbose=True, override=True)
 
-db_URI = os.getenv('AWS_DATABASE_URL')
+db_URI = os.getenv('ElephantSQL_DATABASE_URL')
+
 engine = create_engine(db_URI)
 
 # ------------------------------------------------           

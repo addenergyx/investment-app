@@ -36,7 +36,8 @@ load_dotenv(verbose=True, override=True)
 
 email_user = os.getenv('GMAIL')
 email_pass = os.getenv('GMAIL_PASS') # Make sure 'Less secure app access' is turned on
-db_URI = os.getenv('AWS_DATABASE_URL')
+
+db_URI = os.getenv('ElephantSQL_DATABASE_URL')
 
 
 # port = 993
