@@ -579,7 +579,7 @@ def get_summary():
     
     return summary_df
 
-a = get_summary()
+# a = get_summary()
 
 def get_buy_sell(ticker):
     
