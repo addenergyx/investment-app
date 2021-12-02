@@ -28,6 +28,7 @@ import calendar
 import numpy as np
 from pandas.tseries.holiday import USFederalHolidayCalendar as holidaycalendar
 from pandas.tseries.offsets import *
+from sqlalchemy.pool import NullPool
 
 load_dotenv(verbose=True, override=True)
 
@@ -35,7 +36,7 @@ load_dotenv(verbose=True, override=True)
 
 db_URI = os.getenv('ElephantSQL_DATABASE_URL')
 
-engine = create_engine(db_URI)
+engine = create_engine(db_URI, poolclass=NullPool)
 #c = CurrencyRates()
 
 # driver = get_driver(#headless=True
@@ -94,7 +95,8 @@ def current_price(r):
 
 def get_holdings():
     holdings = pd.read_sql_table("portfolio", con=engine, index_col='index')
-    
+    engine.dispose() 
+
     # driver = get_driver(#headless=True
     #     )
     # driver.implicitly_wait(20)
@@ -178,7 +180,8 @@ def day_treemap(colour='RdBu'):
     # 1 Day Performance
         
     holdings = pd.read_sql_table("charts", con=engine, index_col='index')
-    
+    engine.dispose() 
+
     fig = px.treemap(holdings, path=['Sector', 'Industry', 'Ticker'], values='CAPITAL', color='PCT',
                       color_continuous_scale=colour, color_continuous_midpoint=0, range_color=[-15,15], 
                       #hover_data=['Ticker', 'MARKET VALUE', 'PCT']
@@ -209,7 +212,8 @@ def day_treemap(colour='RdBu'):
 def return_treemap(colour='RdBu'):
     
     holdings = pd.read_sql_table("charts", con=engine, index_col='index')
-    
+    engine.dispose() 
+
     fig = px.treemap(holdings, path=['Sector', 'Industry', 'Ticker'], values='CAPITAL', color='Ri',
                      color_continuous_scale=colour, color_continuous_midpoint=0, range_color=[-50,50])
     
@@ -321,7 +325,8 @@ def performance_chart(ticker='TSLA'):
     #ticker = 'XOS'
     
     all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
-    
+    engine.dispose() 
+
     try:
         market = all_212_equities[all_212_equities['INSTRUMENT'] == ticker]['MARKET NAME'].values[0] 
         yf_symbol = get_yf_symbol(market, ticker)   

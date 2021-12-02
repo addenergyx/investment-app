@@ -28,6 +28,7 @@ from sqlalchemy import create_engine
 from pytrends import dailydata
 from forex_python.converter import CurrencyRates
 import glob
+from sqlalchemy.pool import NullPool
 
 load_dotenv(verbose=True, override=True)
 
@@ -49,7 +50,7 @@ mail = imaplib.IMAP4_SSL(SMTP_SERVER)
 
 # mail.login(email_user, email_pass)
 
-engine = create_engine(db_URI)
+engine = create_engine(db_URI, poolclass=NullPool)
 
 # c = CurrencyRates()
 # date = '28/01/2021 14:42'
@@ -65,7 +66,7 @@ engine = create_engine(db_URI)
 
 def get_holdings():
     holdings = pd.read_sql_table("portfolio", con=engine, index_col='index')
-      
+    engine.dispose() 
     # Recent ticker change due to merger, Yahoo finance pulls wrong data, should be fixed later
     #holdings = holdings[holdings['Ticker'] != 'UWMC']
     
@@ -109,6 +110,7 @@ def get_yf_symbol(market, symbol):
     return yf_symbol
 
 all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
+engine.dispose() 
 
 def get_market(isin, symbol, old_symbol=''):
     
@@ -466,7 +468,8 @@ def stock_split_adjustment(r):
 def time_frame_returns(timeframe='M'):
     
     returns_df = pd.read_sql_table("returns", con=engine, index_col='index', parse_dates=['Dates'])
-    
+    engine.dispose() 
+
     # Fill missing business days
     idx = pd.bdate_range(min(returns_df.Date), max(returns_df.Date))
     returns_df.set_index('Date', inplace=True)
@@ -584,7 +587,8 @@ def get_summary():
 def get_buy_sell(ticker):
     
     portfolio = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day'])
-    
+    engine.dispose() 
+
     df = portfolio[portfolio['Ticker Symbol'] == ticker]
 
     #df['Execution_Price'] = df['Price / share'] # Convert price to original currency

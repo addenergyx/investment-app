@@ -24,12 +24,13 @@ import plotly.express as px
 #from helpers import get_capital # Fix later, can't access gmail in heroku
 from datetime import time
 import time as t
+from sqlalchemy.pool import NullPool
 
 # db_URI = os.getenv('AWS_DATABASE_URL')
 
 db_URI = os.getenv('ElephantSQL_DATABASE_URL')
 
-engine = create_engine(db_URI)
+engine = create_engine(db_URI, poolclass=NullPool)
 
 external_stylesheets =['https://codepen.io/IvanNieto/pen/bRPJyb.css', dbc.themes.BOOTSTRAP,
                        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css']
@@ -61,9 +62,11 @@ app.index_string = '''
 
 portfolio = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day']).sort_values(['Trading day','Trading time'], ascending=False)
 equities = pd.read_sql_table("equities", con=engine, index_col='index')
+engine.dispose() 
 
 def stats():
     summary_df = pd.read_sql_table("summary", con=engine, index_col='index')
+    engine.dispose() 
 
     balance = summary_df['Closing balance'].iloc[-2]
     balance = "{:.2f}".format(round(balance, 2))
