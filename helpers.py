@@ -47,7 +47,7 @@ SMTP_SERVER = "imap.gmail.com"
 
 mail = imaplib.IMAP4_SSL(SMTP_SERVER)
 
-mail.login(email_user, email_pass)
+# mail.login(email_user, email_pass)
 
 engine = create_engine(db_URI)
 
