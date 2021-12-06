@@ -61,7 +61,8 @@ app.index_string = '''
 '''
 
 portfolio = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day']).sort_values(['Trading day','Trading time'], ascending=False)
-equities = pd.read_sql_table("equities", con=engine, index_col='index')
+equities = pd.read_csv('https://raw.githubusercontent.com/addenergyx/investment-app/main/equities.csv')
+
 engine.dispose() 
 
 def stats():

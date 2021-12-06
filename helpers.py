@@ -42,6 +42,8 @@ email_pass = os.getenv('GMAIL_PASS') # Make sure 'Less secure app access' is tur
 
 db_URI = os.getenv('ElephantSQL_DATABASE_URL')
 
+db_URI = os.getenv('HEROKU_DATABASE_URL')
+
 port = 993
 
 SMTP_SERVER = "imap.gmail.com"
@@ -109,8 +111,13 @@ def get_yf_symbol(market, symbol):
         yf_symbol = symbol
     return yf_symbol
 
-all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
-engine.dispose() 
+# all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
+# engine.dispose()
+
+all_212_equities = pd.read_csv('https://raw.githubusercontent.com/addenergyx/investment-app/main/equities.csv')
+
+# all_212_equities.to_sql('equities', engine, if_exists='replace')
+# all_212_equities.to_csv('equities.csv', index=False)
 
 def get_market(isin, symbol, old_symbol=''):
     

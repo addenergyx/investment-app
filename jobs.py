@@ -17,4 +17,4 @@ def updates():
     get_summary()
     #get_live_portfolio()
 
-# updates()
+updates()

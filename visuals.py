@@ -324,7 +324,7 @@ def performance_chart(ticker='TSLA'):
 
     #ticker = 'XOS'
     
-    all_212_equities = pd.read_sql_table("equities", con=engine, index_col='index')
+    all_212_equities = pd.read_csv('https://raw.githubusercontent.com/addenergyx/investment-app/main/equities.csv')
     engine.dispose() 
 
     try:
