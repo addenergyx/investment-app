@@ -62,7 +62,6 @@ app.index_string = '''
 
 portfolio = pd.read_sql_table("trades", con=engine, index_col='index', parse_dates=['Trading day']).sort_values(['Trading day','Trading time'], ascending=False)
 equities = pd.read_csv('https://raw.githubusercontent.com/addenergyx/investment-app/main/equities.csv')
-
 engine.dispose() 
 
 def stats():
@@ -228,7 +227,7 @@ performance_main = [
                       ], className = 'data-row'
                   ),
                                        
-                  dcc.Interval(id="stats-interval", n_intervals=0, interval=600000),
+                  dcc.Interval(id="stats-interval", n_intervals=0, interval=60000),
                   dcc.Interval(id="map-interval", n_intervals=0, interval=60000), # TODO: change interval based on time of day, 240s in pre market, 120 in market hours 
                   dcc.Interval(id="map-intervalb", n_intervals=0, interval=60000),
                   dcc.Interval(id="dropdown-interval", n_intervals=0, interval=720000),
