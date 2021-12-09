@@ -52,7 +52,7 @@ mail = imaplib.IMAP4_SSL(SMTP_SERVER)
 
 if os.getenv('ENVIRONMENT') is not 'production':
     print(f"ENV: {os.getenv('ENVIRONMENT')}")
-    mail.login(email_user, email_pass)
+    #mail.login(email_user, email_pass)
 
 engine = create_engine(db_URI, poolclass=NullPool)
 
