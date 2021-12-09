@@ -50,7 +50,7 @@ SMTP_SERVER = "imap.gmail.com"
 
 mail = imaplib.IMAP4_SSL(SMTP_SERVER)
 
-if os.getenv('ENVIRONMENT'):
+if os.getenv('ENVIRONMENT') is not 'production':
     mail.login(email_user, email_pass)
 
 engine = create_engine(db_URI, poolclass=NullPool)
