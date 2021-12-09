@@ -40,7 +40,7 @@ email_pass = os.getenv('GMAIL_PASS') # Make sure 'Less secure app access' is tur
 
 # db_URI = os.getenv('AWS_DATABASE_URL')
 
-db_URI = os.getenv('ElephantSQL_DATABASE_URL')
+# db_URI = os.getenv('ElephantSQL_DATABASE_URL')
 
 db_URI = os.getenv('HEROKU_DATABASE_URL')
 
@@ -50,7 +50,7 @@ SMTP_SERVER = "imap.gmail.com"
 
 mail = imaplib.IMAP4_SSL(SMTP_SERVER)
 
-# mail.login(email_user, email_pass)
+mail.login(email_user, email_pass)
 
 engine = create_engine(db_URI, poolclass=NullPool)
 
