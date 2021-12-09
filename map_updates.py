@@ -16,7 +16,10 @@ import pandas as pd
 
 load_dotenv(verbose=True, override=True)
 
-db_URI = os.getenv('AWS_DATABASE_URL')
+# db_URI = os.getenv('AWS_DATABASE_URL')
+
+db_URI = os.getenv('HEROKU_DATABASE_URL')
+
 engine = create_engine(db_URI)
 
 holdings = pd.read_sql_table("portfolio", con=engine, index_col='index')
@@ -171,7 +174,7 @@ def return_map():
 
     print('done')
     
-#return_map()
+return_map()
 
 
 
