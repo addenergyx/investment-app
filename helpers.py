@@ -42,7 +42,9 @@ email_pass = os.getenv('GMAIL_PASS') # Make sure 'Less secure app access' is tur
 
 # db_URI = os.getenv('ElephantSQL_DATABASE_URL')
 
-db_URI = os.getenv('HEROKU_DATABASE_URL')
+# db_URI = os.getenv('HEROKU_DATABASE_URL')
+
+db_URI = os.getenv('DATABASE_URL')
 
 port = 993
 
@@ -360,11 +362,11 @@ def get_portfolio():
         
         dic = yf.Ticker(x).info
         
-        name = dic['longName'] if 'longName' in dic else x
+        name = dic['longName'] if dic['longName'] else x
         
-        sector = dic['sector'] if 'sector' in dic else 'Uncategorised'
+        sector = dic['sector'] if dic['sector'] else 'Uncategorised'
             
-        industry = dic['industry'] if 'industry' in dic else 'Uncategorised'
+        industry = dic['industry'] if dic['industry'] in dic else 'Uncategorised'
 
         print(name) if name is not x or None else print(f'Error: {x}')
         
