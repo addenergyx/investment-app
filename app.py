@@ -30,7 +30,9 @@ from sqlalchemy.pool import NullPool
 
 # db_URI = os.getenv('ElephantSQL_DATABASE_URL')
 
-db_URI = os.getenv('HEROKU_DATABASE_URL')
+# db_URI = os.getenv('HEROKU_DATABASE_URL')
+
+db_URI = os.getenv('DATABASE_URL')
 
 engine = create_engine(db_URI, poolclass=NullPool)
 
