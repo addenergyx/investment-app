@@ -362,12 +362,12 @@ def get_portfolio():
         
         dic = yf.Ticker(x).info
         
-        name = dic['longName'] if dic['longName'] else x
+        name = dic.get('longName') or x
         
-        sector = dic['sector'] if dic['sector'] else 'Uncategorised'
+        sector = dic.get('sector') or 'Uncategorised'
+        
+        industry = dic.get('industry') or 'Uncategorised'
             
-        industry = dic['industry'] if dic['industry'] in dic else 'Uncategorised'
-
         print(name) if name is not x or None else print(f'Error: {x}')
         
         if name is x:
